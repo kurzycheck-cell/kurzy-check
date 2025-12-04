@@ -1,1 +1,108 @@
+/* Resetovanie a základné nastavenia */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f4f7f9; /* Svetlo šedý profesionálny podklad */
+    color: #333;
+    line-height: 1.6;
+}
 
+/* Hlavička a päta */
+.header {
+    background-color: #007bff; /* Modrá farba (často spojená s financiami) */
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.footer {
+    text-align: center;
+    padding: 15px 0;
+    margin-top: 30px;
+    background-color: #e9ecef;
+    font-size: 14px;
+    color: #6c757d;
+}
+
+/* Kontajner a boxy */
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 30px auto;
+    display: flex; /* Flexbox pre rozdelenie obsahu */
+    gap: 30px; /* Medzera medzi kalkulačkou a tabuľkou */
+}
+
+.box {
+    background-color: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    flex: 1; /* Aby zaberali rovnaké miesto */
+}
+
+/* Kalkulačka */
+.calculator input, .calculator select, .calculator button {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box; /* Dôležité pre responzivitu */
+}
+
+.calculator button {
+    background-color: #28a745; /* Zelená farba pre akciu (ako 'kúpiť') */
+    color: white;
+    cursor: pointer;
+    border: none;
+    transition: background-color 0.3s;
+}
+
+.calculator button:hover {
+    background-color: #218838;
+}
+
+.result {
+    font-size: 18px;
+    font-weight: bold;
+    color: #007bff;
+    text-align: center;
+    padding: 10px;
+    border: 1px dashed #007bff50;
+    border-radius: 4px;
+}
+
+/* Tabuľka */
+.rates-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+.rates-table th, .rates-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.rates-table th {
+    background-color: #f8f9fa;
+    font-weight: bold;
+    color: #495057;
+}
+
+/* Responzívny dizajn pre mobily */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column; /* Na mobile sa prvky zaradia pod seba */
+        gap: 20px;
+    }
+}
