@@ -29,8 +29,26 @@ async function fetchAllData() {
         const fiatData = await fiatResponse.json();
         ratesData.fiat = fiatData.rates;
         ratesData.fiat.EUR = 1; // Pridanie EUR ako základ
-        updateFiatNames(fiatData.rates);
-    } catch (e) { console.error("Chyba pri načítaní mien:", e); }
+        function updateFiatNames(rates) {
+    // Rozšírený zoznam mien a ich prekladov
+    const knownNames = { 
+        'USD': 'Americký Dolár', 
+        'CZK': 'Česká Koruna', 
+        'PLN': 'Poľský Zlotý', 
+        'GBP': 'Britská Libra', 
+        'CHF': 'Švajčiarsky Frank', 
+        'EUR': 'Euro',
+        'CAD': 'Kanadský Dolár',
+        'AUD': 'Austrálsky Dolár',
+        'JPY': 'Japonský Jen',
+        'NOK': 'Nórska Koruna',
+        'SEK': 'Švédska Koruna',
+        'HUF': 'Maďarský Forint' // Nové meny
+    };
+    for (const symbol in rates) {
+        assetNames[symbol] = knownNames[symbol] || symbol;
+    }
+}
 
     // 2. Krypto
     try {
