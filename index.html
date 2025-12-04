@@ -85,28 +85,6 @@
         .table-container {
             position: relative;
         }
-        /* Gradient naľavo */
-        .table-container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 100%;
-            width: 20px;
-            pointer-events: none;
-            background: linear-gradient(to right, #1e293b 0%, rgba(30, 41, 59, 0) 100%);
-        }
-        /* Gradient napravo */
-        .table-container::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            right: 0;
-            height: 100%;
-            width: 20px;
-            pointer-events: none;
-            background: linear-gradient(to left, #1e293b 0%, rgba(30, 41, 59, 0) 100%);
-        }
 
         /* Načítavací indikátor */
         .loader {
@@ -155,13 +133,12 @@
             <nav class="mb-8 overflow-x-auto">
                 <div class="flex border-b border-card-hover" id="main-tabs">
                     <button onclick="showView('dashboard')" class="tab-button active" data-view="dashboard">Dashboard</button>
-                    <button onclick="showView('crypto')" class="tab-button" data-view="crypto">Kryptomeny</button>
-                    <button onclick="showView('stocks')" class="tab-button" data-view="stocks">Akcie</button>
-                    <button onclick="showView('commodities')" class="tab-button" data-view="commodities">Komodity</button>
-                    <button onclick="showView('metals')" class="tab-button" data-view="metals">Drahé Kovy</button>
-                    <button onclick="showView('bonds')" class="tab-button" data-view="bonds">Dlhopisy</button>
-                    <button onclick="showView('forex')" class="tab-button" data-view="forex">Kurzy Mien (Forex)</button>
-                    <button onclick="showView('calculator')" class="tab-button" data-view="calculator">Investičná Kalkulačka</button>
+                    <button onclick="showView('crypto')" class="tab-button" data-view="crypto">Kryptomeny (Real)</button>
+                    <button onclick="showView('forex')" class="tab-button" data-view="forex">Kurzy Mien (Real)</button>
+                </div>
+                <div class="text-sm text-yellow-500 mt-2 p-2 bg-card-hover rounded-lg">
+                    <i data-lucide="alert-triangle" class="inline w-4 h-4 mr-1"></i>
+                    **Dôležité:** Pre Akcie a Komodity nie sú dostupné bezplatné, real-time API. Zobrazujeme len dáta z dostupných Live zdrojov (Krypto, Forex).
                 </div>
             </nav>
 
@@ -169,7 +146,7 @@
                 <!-- 1. DASHBOARD VIEW -->
                 <div id="dashboard" class="view-content">
                     <h2 class="text-3xl font-bold mb-6 text-slate-100 flex items-center">
-                        Aktuálne Trhové Súhrny
+                        Aktuálne Live Dáta
                         <span id="loading-spinner" class="loader ml-4 opacity-0"></span>
                     </h2>
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -189,21 +166,20 @@
                                 --% (24h)
                             </span>
                         </div>
-                        <!-- Karta 3: Zlato (Live Proxy) -->
+                        <!-- Karta 3: EUR/USD (Live) -->
                         <div class="bg-card-bg p-6 rounded-2xl shadow-xl border border-card-hover transition duration-300 hover:scale-[1.02]">
-                            <p class="text-sm text-slate-400">Zlato (XAU/USD)</p>
-                            <p class="text-3xl font-bold mt-2 text-white" id="dash-gold-price">Načítavam...</p>
-                            <span class="text-slate-400 text-sm flex items-center mt-3 font-semibold" id="dash-gold-change">
-                                --% (24h)
+                            <p class="text-sm text-slate-400">Euro / USD (Live)</p>
+                            <p class="text-3xl font-bold mt-2 text-white" id="dash-eurusd-price">Načítavam...</p>
+                            <span class="text-slate-400 text-sm flex items-center mt-3 font-semibold" id="dash-eurusd-change">
+                                Live Rate
                             </span>
                         </div>
-                        <!-- Karta 4: S&P 500 Index -->
+                        <!-- Karta 4: Informačná karta -->
                         <div class="bg-card-bg p-6 rounded-2xl shadow-xl border border-card-hover transition duration-300 hover:scale-[1.02]">
-                            <p class="text-sm text-slate-400">S&P 500 Index (Sim)</p>
-                            <p class="text-3xl font-bold mt-2 text-white" id="dash-sp500-price">5,123.45</p>
-                            <span class="text-up-green text-sm flex items-center mt-3 font-semibold" id="dash-sp500-change">
-                                +1.01% (Dnes)
-                                <i data-lucide="trending-up" class="w-4 h-4 ml-1"></i>
+                            <p class="text-sm text-slate-400">Dátové Zdroj</p>
+                            <p class="text-3xl font-bold mt-2 text-white">100% Real</p>
+                            <span class="text-slate-400 text-sm flex items-center mt-3 font-semibold">
+                                Bez Simulácie
                             </span>
                         </div>
                     </div>
@@ -235,127 +211,21 @@
                                 <!-- Dáta sa vložia cez JS -->
                             </tbody>
                         </table>
+                        <div id="crypto-status" class="py-4 text-center text-slate-400">Načítavam dáta...</div>
                     </div>
                 </div>
 
-                <!-- 3. AKCIE VIEW -->
-                <div id="stocks" class="view-content hidden">
-                    <h2 class="text-2xl font-semibold mb-4 text-slate-200">Sledované Akcie (Simulácia*)</h2>
-                    <p class="text-xs text-slate-500 mb-2">*Live dáta pre akcie vyžadujú platený kľúč. Zobrazujeme realistickú simuláciu.</p>
-                    <div class="bg-card-bg p-4 rounded-2xl shadow-xl border border-card-hover table-container overflow-x-auto">
-                        <table class="min-w-full divide-y divide-card-hover">
-                            <thead>
-                                <tr class="text-left text-slate-400">
-                                    <th class="py-3 px-4 font-semibold">Ikona</th>
-                                    <th class="py-3 px-4 font-semibold">Spoločnosť</th>
-                                    <th class="py-3 px-4 font-semibold">Cena (USD)</th>
-                                    <th class="py-3 px-4 font-semibold">Dnes</th>
-                                </tr>
-                            </thead>
-                            <tbody id="stock-list" class="divide-y divide-card-hover">
-                                <!-- Dáta sa vložia cez JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- 4. KOMODITY VIEW -->
-                <div id="commodities" class="view-content hidden">
-                    <h2 class="text-2xl font-semibold mb-4 text-slate-200">Hlavné Komodity (Simulácia)</h2>
-                    <div class="bg-card-bg p-4 rounded-2xl shadow-xl border border-card-hover table-container overflow-x-auto">
-                        <table class="min-w-full divide-y divide-card-hover">
-                            <thead>
-                                <tr class="text-left text-slate-400">
-                                    <th class="py-3 px-4 font-semibold">Ikona</th>
-                                    <th class="py-3 px-4 font-semibold">Komodita</th>
-                                    <th class="py-3 px-4 font-semibold">Cena (USD/Jednotka)</th>
-                                    <th class="py-3 px-4 font-semibold">Dnes</th>
-                                </tr>
-                            </thead>
-                            <tbody id="commodity-list" class="divide-y divide-card-hover">
-                                <!-- Dáta sa vložia cez JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- 5. DRAHÉ KOVY VIEW -->
-                <div id="metals" class="view-content hidden">
-                    <h2 class="text-2xl font-semibold mb-4 text-slate-200">Drahé Kovy (Live Token Proxy)</h2>
-                    <p class="text-xs text-slate-500 mb-2">Ceny odvodené z tokenizovaných aktív (PAXG, KAG) pre live dáta.</p>
-                    <div class="bg-card-bg p-4 rounded-2xl shadow-xl border border-card-hover">
-                        <div id="metals-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                            <!-- Dáta sa vložia cez JS -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 6. DLHOPISY VIEW -->
-                <div id="bonds" class="view-content hidden">
-                    <h2 class="text-2xl font-semibold mb-4 text-slate-200">Vybrané Dlhopisy (Simulácia)</h2>
-                    <div class="bg-card-bg p-4 rounded-2xl shadow-xl border border-card-hover table-container overflow-x-auto">
-                        <table class="min-w-full divide-y divide-card-hover">
-                            <thead>
-                                <tr class="text-left text-slate-400">
-                                    <th class="py-3 px-4 font-semibold">Označenie</th>
-                                    <th class="py-3 px-4 font-semibold">Názov</th>
-                                    <th class="py-3 px-4 font-semibold">Výnos (%)</th>
-                                    <th class="py-3 px-4 font-semibold hidden sm:table-cell">Maturita</th>
-                                </tr>
-                            </thead>
-                            <tbody id="bond-list" class="divide-y divide-card-hover">
-                                <!-- Dáta sa vložia cez JS -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- 7. MENY VIEW (Forex) -->
+                <!-- 3. MENY VIEW (Forex) -->
                 <div id="forex" class="view-content hidden">
                     <h2 class="text-2xl font-semibold mb-4 text-slate-200">Kurzy Mien (Live z API)</h2>
                     <div class="bg-card-bg p-6 rounded-2xl shadow-xl border border-card-hover">
+                        <!-- Grid bol navrhnutý pre 4 stĺpce na veľkom, čo je ideálne pre 6 mien -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="forex-list">
                             <!-- Dáta sa vložia cez JS -->
                         </div>
+                        <div id="forex-status" class="py-4 text-center text-slate-400">Načítavam dáta...</div>
                     </div>
                 </div>
-                
-                <!-- 8. KALKULAČKA VIEW -->
-                <div id="calculator" class="view-content hidden">
-                    <h2 class="text-2xl font-semibold mb-4 text-slate-200">Historická Investičná Kalkulačka</h2>
-                    <div class="bg-card-bg p-6 rounded-2xl shadow-xl border border-card-hover max-w-lg">
-                        <p class="text-slate-400 mb-4">Zistite, akú hodnotu by mala vaša investícia dnes.</p>
-                        
-                        <div class="mb-4">
-                            <label for="asset" class="block text-sm font-medium mb-1">Vyberte aktívum:</label>
-                            <select id="asset" class="w-full p-2 rounded-lg bg-card-hover text-white border border-card-hover focus:ring-accent-primary focus:border-accent-primary">
-                                <option value="sp500">S&P 500 Index</option>
-                                <option value="btc">Bitcoin (BTC)</option>
-                                <option value="gold">Zlato (XAU)</option>
-                            </select>
-                        </div>
-
-                        <div class="mb-4">
-                            <label for="years" class="block text-sm font-medium mb-1">Počet rokov v minulosti (napr. 10):</label>
-                            <input type="number" id="years" value="10" min="1" max="50" class="w-full p-2 rounded-lg bg-card-hover text-white border border-card-hover focus:ring-accent-primary focus:border-accent-primary">
-                        </div>
-
-                        <div class="mb-6">
-                            <label for="investment" class="block text-sm font-medium mb-1">Pôvodná investovaná suma (USD):</label>
-                            <input type="number" id="investment" value="1000" min="1" class="w-full p-2 rounded-lg bg-card-hover text-white border border-card-hover focus:ring-accent-primary focus:border-accent-primary">
-                        </div>
-
-                        <button onclick="calculateInvestment()" class="w-full p-3 rounded-xl font-bold bg-accent-primary text-white hover:bg-blue-600 transition duration-200 shadow-md shadow-accent-primary/30">
-                            Vypočítať Hodnotu Dnes
-                        </button>
-
-                        <div id="calculator-result" class="mt-6 p-4 bg-card-hover rounded-xl border border-card-hover hidden">
-                            <h4 class="text-lg font-semibold mb-2 text-accent-primary">Výsledok simulácie:</h4>
-                            <p id="result-text" class="text-white text-2xl font-bold"></p>
-                        </div>
-                    </div>
-                </div>
-
             </div>
         </div>
         
@@ -367,8 +237,8 @@
                     <div class="p-6 bg-card-bg rounded-2xl shadow-xl border border-card-hover">
                         <h3 class="text-xl font-semibold text-accent-primary mb-3">Ako to funguje?</h3>
                         <p class="text-slate-300">
-                            Kryptomeny a meny sú sťahované z <strong>reálnych verejných API</strong> (CoinGecko, ExchangeRate). 
-                            Keďže verejné dáta pre akciový trh (S&P500, Apple) sú spoplatnené, tieto hodnoty sú v tejto verzii simulované na základe trhových vzorcov.
+                            Táto aplikácia využíva len <strong>reálne, bezplatné, verejné API</strong> pre Kryptomeny (CoinGecko) a Kurzy Mien (ExchangeRate-API). 
+                            Preto neobsahuje sekcie Akcií a Komodít, pre ktoré nie sú dostupné spoľahlivé real-time API bez poplatku. Všetky zobrazené dáta sú stiahnuté priamo z internetu.
                         </p>
                     </div>
                 </div>
@@ -379,9 +249,8 @@
     <!-- JavaScript Logika -->
     <script>
         // Funkcia na generovanie ikony
-        const getIcon = (symbol, type) => {
+        const getIcon = (symbol) => {
             switch (symbol) {
-                // Crypto
                 case 'BTC': return '₿';
                 case 'ETH': return 'Ξ';
                 case 'XRP': return '✖️';
@@ -392,85 +261,29 @@
                 case 'LTC': return '⛏️';
                 case 'SHIB': return '🐶';
                 case 'TRX': return '🔗';
-                // Akcie
-                case 'NVDA': return 'N';
-                case 'AMD': return 'A';
-                case 'AAPL': return '';
-                case 'META': return 'Ⓜ️';
-                case 'MCD': return '🍔';
-                case 'MA': return '💳';
-                case 'NKE': return '👟';
-                case 'PAG': return 'P';
-                case 'HP': return 'H';
-                case 'S&P500': return '📈';
-                // Komodity/Kovy
-                case 'XAU': return '🥇'; 
-                case 'XAG': return '🥈'; 
-                case 'BRENT': return '🛢️'; 
-                case 'PL': return '💠'; 
-                case 'PA': return '⚪'; 
-                case 'CC': return '🍫'; 
-                case 'SUGAR': return '🍬'; 
-                case 'NI': return '🧪'; 
-                case 'PB': return '🧱'; 
-                case 'ZN': return '🔩'; 
-                // Dlhopisy
-                case 'US10Y': return '🏛️'; 
-                case 'DE10Y': return '🇩🇪';
-                case 'SKGOV': return '🇸🇰';
-                case 'JP10Y': return '🇯🇵';
-
-                default: return type === 'stock' ? '🏢' : '💲';
+                default: return '💲';
             }
         };
 
         // --- DÁTA ---
         
-        // 1. Krypto (Mapovanie ID pre CoinGecko)
+        // Predvolené hodnoty (pre fallback, ak sa API nenačíta)
         let cryptoData = [
-            { id: "bitcoin", symbol: "BTC", name: "Bitcoin", price: 0, change: 0, cap: "Loading", icon: getIcon('BTC') },
-            { id: "ethereum", symbol: "ETH", name: "Ethereum", price: 0, change: 0, cap: "Loading", icon: getIcon('ETH') },
-            { id: "binancecoin", symbol: "BNB", name: "BNB", price: 0, change: 0, cap: "Loading", icon: getIcon('BNB') },
-            { id: "solana", symbol: "SOL", name: "Solana", price: 0, change: 0, cap: "Loading", icon: getIcon('SOL') },
-            { id: "ripple", symbol: "XRP", name: "XRP", price: 0, change: 0, cap: "Loading", icon: getIcon('XRP') },
-            { id: "dogecoin", symbol: "DOGE", name: "Dogecoin", price: 0, change: 0, cap: "Loading", icon: getIcon('DOGE') },
-            { id: "cardano", symbol: "ADA", name: "Cardano", price: 0, change: 0, cap: "Loading", icon: getIcon('ADA') },
-            { id: "shiba-inu", symbol: "SHIB", name: "Shiba Inu", price: 0, change: 0, cap: "Loading", icon: getIcon('SHIB') },
+            { id: "bitcoin", symbol: "BTC", name: "Bitcoin", price: 60000.00, change: 0, cap: "Loading", icon: getIcon('BTC') },
+            { id: "ethereum", symbol: "ETH", name: "Ethereum", price: 3000.00, change: 0, cap: "Loading", icon: getIcon('ETH') },
+            { id: "binancecoin", symbol: "BNB", name: "BNB", price: 500.00, change: 0, cap: "Loading", icon: getIcon('BNB') },
+            { id: "solana", symbol: "SOL", name: "Solana", price: 100.00, change: 0, cap: "Loading", icon: getIcon('SOL') },
+            { id: "ripple", symbol: "XRP", name: "XRP", price: 0.50, change: 0, cap: "Loading", icon: getIcon('XRP') },
         ];
 
-        // 2. Kovy (Mapovanie ID pre CoinGecko - Proxy tokeny)
-        let metalData = [
-            { id: "pax-gold", symbol: "XAU", name: "Zlato (PAXG)", price: 0, change: 0, icon: getIcon('XAU') },
-            { id: "kinesis-silver", symbol: "XAG", name: "Striebro (KAG)", price: 0, change: 0, icon: getIcon('XAG') },
-        ];
-
-        // 3. Forex (Fixný zoznam, hodnoty sa fetchujú)
+        // Kurzy mien (rozšírené o 3 páry)
         let forexData = [
-            { pair: "EUR/USD", rate: 1.08, change: 0, icon: '🇪🇺/🇺🇸' },
-            { pair: "USD/JPY", rate: 155.0, change: 0, icon: '🇺🇸/🇯🇵' },
-            { pair: "GBP/USD", rate: 1.25, change: 0, icon: '🇬🇧/🇺🇸' },
-        ];
-
-        // 4. Akcie (Simulované - Real API je platené)
-        let mockStocks = [ 
-            { symbol: "S&P500", company: "S&P 500 Index", price: 5123.45, change: 1.01, icon: getIcon('S&P500') },
-            { symbol: "NVDA", company: "NVIDIA Corp.", price: 955.10, change: 2.15, icon: getIcon('NVDA') },
-            { symbol: "AAPL", company: "Apple Inc.", price: 185.30, change: 0.85, icon: getIcon('AAPL') },
-            { symbol: "AMD", company: "Advanced Micro Devices", price: 160.20, change: -1.20, icon: getIcon('AMD') },
-            { symbol: "META", company: "Meta Platforms", price: 475.00, change: 0.45, icon: getIcon('META') },
-            { symbol: "MCD", company: "McDonald's Corp.", price: 275.50, change: 0.22, icon: getIcon('MCD') },
-        ];
-
-        let mockCommodities = [
-            { name: "Ropa Brent", symbol: "BRENT", price: 85.30, change: -0.45, unit: "Barel", icon: getIcon('BRENT') },
-            { name: "Kakao", symbol: "CC", price: 9500.00, change: 2.50, unit: "Tona", icon: getIcon('CC') },
-            { name: "Cukor", symbol: "SUGAR", price: 18.50, change: -0.05, unit: "Libra", icon: getIcon('SUGAR') },
-        ];
-
-        let mockBonds = [
-            { symbol: "US10Y", name: "10-ročný US Treasury", yield: 4.25, change: 0.05, maturity: "2034", icon: getIcon('US10Y') },
-            { symbol: "DE10Y", name: "10-ročný Nemecký Bund", yield: 2.55, change: -0.02, maturity: "2034", icon: getIcon('DE10Y') },
-            { symbol: "SKGOV", name: "Slovenský 5-ročný", yield: 3.80, change: 0.10, maturity: "2029", icon: getIcon('SKGOV') },
+            { pair: "EUR/USD", rate: 1.0, change: 0, icon: '🇪🇺/🇺🇸' },
+            { pair: "USD/JPY", rate: 150.0, change: 0, icon: '🇺🇸/🇯🇵' },
+            { pair: "GBP/USD", rate: 1.2, change: 0, icon: '🇬🇧/🇺🇸' },
+            { pair: "USD/CAD", rate: 1.35, change: 0, icon: '🇺🇸/🇨🇦' }, 
+            { pair: "USD/CHF", rate: 0.90, change: 0, icon: '🇺🇸/🇨🇭' }, 
+            { pair: "AUD/USD", rate: 0.65, change: 0, icon: '🇦🇺/🇺🇸' }, 
         ];
 
         // --- Core Logika UI ---
@@ -525,64 +338,87 @@
             document.getElementById('loading-spinner').classList.remove('opacity-0');
             document.getElementById('live-indicator').classList.remove('hidden');
             document.getElementById('live-indicator').classList.add('flex');
+            document.getElementById('crypto-status').innerText = 'Načítavam dáta...';
+            document.getElementById('forex-status').innerText = 'Načítavam dáta...';
+
+            let apiSuccess = false;
 
             try {
-                // 1. Fetch Crypto & Metals (CoinGecko)
+                // 1. Fetch Crypto (CoinGecko)
                 const cryptoIds = cryptoData.map(c => c.id).join(',');
-                const metalIds = metalData.map(m => m.id).join(',');
-                const allIds = `${cryptoIds},${metalIds}`;
 
-                // Pozor: CoinGecko Free API má limity. Voláme raz za 10s.
-                const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${allIds}&vs_currencies=usd&include_24hr_change=true`);
+                // 4s timeout pre mobilné siete
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000); 
+
+                const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoIds}&vs_currencies=usd&include_24hr_change=true`, {
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
                 if (!response.ok) throw new Error('CoinGecko Error');
                 const data = await response.json();
-
+                
                 // Update Crypto
+                let btcPriceUpdated = false;
                 cryptoData.forEach(coin => {
                     if (data[coin.id]) {
                         coin.price = data[coin.id].usd;
                         coin.change = data[coin.id].usd_24h_change;
-                        coin.cap = "Live"; // CoinGecko simple endpoint nedáva cap, na to treba iný endpoint
+                        coin.cap = "Live"; 
+                        if (coin.symbol === 'BTC') btcPriceUpdated = true;
+                    } else {
+                        // Ak CoinGecko neodpovie, nastav na N/A
+                        coin.price = null; 
+                        coin.change = null;
+                        coin.cap = "N/A";
                     }
                 });
-
-                // Update Metals
-                metalData.forEach(metal => {
-                    if (data[metal.id]) {
-                        metal.price = data[metal.id].usd;
-                        metal.change = data[metal.id].usd_24h_change;
-                    }
-                });
+                if (btcPriceUpdated) {
+                    apiSuccess = true;
+                } else {
+                    document.getElementById('crypto-status').innerText = 'Chyba: Dáta kryptomien nedostupné.';
+                }
 
                 // 2. Fetch Forex (ExchangeRate-API)
-                // Toto API je zadarmo a stabilné
-                const forexRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD');
+                const controllerFx = new AbortController();
+                const timeoutFx = setTimeout(() => controllerFx.abort(), 4000);
+                
+                // Fetch USD rates
+                const forexRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {
+                    signal: controllerFx.signal
+                });
+                clearTimeout(timeoutFx);
+
                 if (!forexRes.ok) throw new Error('Forex API Error');
                 const fxData = await forexRes.json();
                 
-                // EUR/USD = 1 / USD_in_EUR
-                const usdToEur = fxData.rates.EUR;
-                const usdToJpy = fxData.rates.JPY;
-                const usdToGbp = fxData.rates.GBP;
+                const rates = fxData.rates;
 
-                // Update našich párov
-                forexData[0].rate = 1 / usdToEur; // EUR/USD
-                forexData[1].rate = usdToJpy;     // USD/JPY
-                forexData[2].rate = 1 / usdToGbp; // GBP/USD
+                // Aktualizácia kurzov:
+                forexData[0].rate = 1 / rates.EUR; // EUR/USD = 1 / (USD/EUR)
+                forexData[1].rate = rates.JPY;     // USD/JPY
+                forexData[2].rate = 1 / rates.GBP; // GBP/USD = 1 / (USD/GBP)
+                forexData[3].rate = rates.CAD;     // USD/CAD
+                forexData[4].rate = rates.CHF;     // USD/CHF
+                forexData[5].rate = 1 / rates.AUD; // AUD/USD = 1 / (USD/AUD)
+
+                document.getElementById('forex-status').innerText = ''; // Vymaž status po úspechu
 
             } catch (error) {
-                console.error("Chyba pri sťahovaní dát:", error);
-                // Fallback na simuláciu ak API zlyhá (napr. rate limit)
-                simulateCryptoFallback();
+                console.warn("API nedostupné (Mobile/Network). Zostávam na default hodnotách:", error);
+                document.getElementById('live-indicator').classList.remove('flex');
+                document.getElementById('live-indicator').classList.add('hidden');
+                document.getElementById('crypto-status').innerText = 'Chyba pripojenia: Skontrolujte internet.';
+                document.getElementById('forex-status').innerText = 'Chyba pripojenia: Skontrolujte internet.';
             }
-
-            // 3. Simulácia akcií (Pretože nemáme free API)
-            simulateStocks();
 
             // Render
             renderAll();
             updateDashboardValues();
-            updateChart();
+            if(apiSuccess) {
+                 updateChart();
+            }
             
             // Skry loader
             setTimeout(() => {
@@ -590,31 +426,19 @@
             }, 500);
         }
 
-        function simulateStocks() {
-            // Jemná fluktuácia pre akcie, aby to vyzeralo živo
-            mockStocks.forEach(s => {
-                s.price = s.price * (1 + (Math.random() * 0.002 - 0.001));
-                s.change += (Math.random() * 0.05 - 0.025);
-            });
-            mockCommodities.forEach(c => {
-                c.price = c.price * (1 + (Math.random() * 0.003 - 0.0015));
-            });
-            mockBonds.forEach(b => {
-                b.yield += (Math.random() * 0.01 - 0.005);
-            });
-        }
-
-        function simulateCryptoFallback() {
-            // Ak zlyhá internet, hýb cenami náhodne
-            cryptoData.forEach(c => c.price = c.price * (1 + (Math.random() * 0.01 - 0.005)));
-        }
-
         // --- RENDER FUNCTIONS ---
 
         function renderCrypto() {
             const tbody = document.getElementById('crypto-list');
             tbody.innerHTML = '';
-            cryptoData.forEach((coin, index) => {
+            // Načítam časť dát z poľa, aby bola tabuľka menšia
+            const limitedCryptoData = cryptoData.slice(0, 5); 
+
+            limitedCryptoData.forEach((coin, index) => {
+                const priceText = coin.price ? `$${formatMoney(coin.price, coin.price < 1 ? 5 : 2)}` : 'N/A';
+                const changeText = coin.change !== null ? `${coin.change > 0 ? '+' : ''}${coin.change.toFixed(2)}%` : 'N/A';
+                const changeClass = coin.change !== null ? getChangeColorClass(coin.change) : 'text-slate-400';
+
                 const tr = document.createElement('tr');
                 tr.className = 'data-row border-b border-card-hover last:border-0';
                 tr.innerHTML = `
@@ -626,32 +450,17 @@
                             <span class="text-xs text-slate-500">${coin.symbol}</span>
                         </div>
                     </td>
-                    <td class="py-3 px-4 font-mono text-white">$${formatMoney(coin.price, coin.price < 1 ? 5 : 2)}</td>
-                    <td class="py-3 px-4 font-bold ${getChangeColorClass(coin.change)}">
-                        ${coin.change > 0 ? '+' : ''}${coin.change.toFixed(2)}%
+                    <td class="py-3 px-4 font-mono text-white">${priceText}</td>
+                    <td class="py-3 px-4 font-bold ${changeClass}">
+                        ${changeText}
                     </td>
                     <td class="py-3 px-4 hidden sm:table-cell text-slate-400 text-sm">${coin.cap}</td>
                 `;
                 tbody.appendChild(tr);
             });
-        }
-
-        function renderMetals() {
-            const container = document.getElementById('metals-list');
-            container.innerHTML = '';
-            metalData.forEach(metal => {
-                const div = document.createElement('div');
-                div.className = 'bg-card-hover/50 p-4 rounded-xl border border-card-hover flex flex-col items-center justify-center text-center transition hover:bg-card-hover';
-                div.innerHTML = `
-                    <div class="text-4xl mb-2">${metal.icon}</div>
-                    <h3 class="text-lg font-bold text-white mb-1">${metal.name}</h3>
-                    <p class="text-2xl font-mono text-white mb-1">$${formatMoney(metal.price)}</p>
-                    <span class="text-sm font-bold ${getChangeColorClass(metal.change)}">
-                        ${metal.change > 0 ? '+' : ''}${metal.change.toFixed(2)}%
-                    </span>
-                `;
-                container.appendChild(div);
-            });
+            if (limitedCryptoData.length === 0) {
+                 document.getElementById('crypto-status').innerText = 'Chyba: Dáta kryptomien nedostupné.';
+            }
         }
 
         function renderForex() {
@@ -667,7 +476,6 @@
                     </div>
                     <div class="text-right">
                         <p class="font-mono text-white text-lg">${pair.rate.toFixed(4)}</p>
-                        <!-- Forex API nedáva daily change, simulujeme farbu -->
                         <p class="text-xs font-bold text-slate-400">Live Rate</p>
                     </div>
                 `;
@@ -675,86 +483,43 @@
             });
         }
         
-        // Funkcie pre Stock/Bonds/Commodities ostávajú rovnaké ako predtým (len renderujú mock polia)
-        function renderStocks() {
-            const tbody = document.getElementById('stock-list');
-            tbody.innerHTML = '';
-            mockStocks.forEach(stock => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="py-3 px-4 text-2xl">${stock.icon}</td>
-                    <td class="py-3 px-4"><span class="block text-white font-bold">${stock.company}</span><span class="text-xs text-slate-500">${stock.symbol}</span></td>
-                    <td class="py-3 px-4 font-mono text-white">$${formatMoney(stock.price)}</td>
-                    <td class="py-3 px-4 font-bold ${getChangeColorClass(stock.change)}">${stock.change > 0 ? '+' : ''}${stock.change.toFixed(2)}%</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-        function renderCommodities() {
-            const tbody = document.getElementById('commodity-list');
-            tbody.innerHTML = '';
-            mockCommodities.forEach(com => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="py-3 px-4 text-2xl">${com.icon}</td>
-                    <td class="py-3 px-4"><span class="block text-white font-bold">${com.name}</span></td>
-                    <td class="py-3 px-4 font-mono text-white">$${formatMoney(com.price)}</td>
-                    <td class="py-3 px-4 font-bold ${getChangeColorClass(com.change)}">${com.change > 0 ? '+' : ''}${com.change.toFixed(2)}%</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-        function renderBonds() {
-            const tbody = document.getElementById('bond-list');
-            tbody.innerHTML = '';
-            mockBonds.forEach(bond => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="py-3 px-4 flex items-center"><span class="mr-2 text-xl">${bond.icon}</span><span class="font-bold text-white">${bond.symbol}</span></td>
-                    <td class="py-3 px-4 text-slate-300 text-sm">${bond.name}</td>
-                    <td class="py-3 px-4 font-mono font-bold ${getChangeColorClass(bond.change)}">${bond.yield.toFixed(3)}%</td>
-                    <td class="py-3 px-4 hidden sm:table-cell text-slate-400 text-sm">${bond.maturity}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
         function renderAll() {
             if (currentTabView === 'crypto') renderCrypto();
-            if (currentTabView === 'metals') renderMetals();
             if (currentTabView === 'forex') renderForex();
-            if (currentTabView === 'stocks') renderStocks();
-            if (currentTabView === 'commodities') renderCommodities();
-            if (currentTabView === 'bonds') renderBonds();
         }
 
         function updateDashboardValues() {
             const btc = cryptoData.find(c => c.symbol === 'BTC');
             const eth = cryptoData.find(c => c.symbol === 'ETH');
-            const gold = metalData.find(m => m.symbol === 'XAU');
-            const sp500 = mockStocks.find(s => s.symbol === 'S&P500');
+            const eurusd = forexData.find(f => f.pair === 'EUR/USD');
 
+            // Bitcoin
             if (btc && btc.price > 0) {
                 document.getElementById('dash-btc-price').innerText = `$${formatMoney(btc.price)}`;
                 document.getElementById('dash-btc-change').innerHTML = `<span class="${getChangeColorClass(btc.change)}">${btc.change.toFixed(2)}%</span> (24h)`;
+            } else {
+                 document.getElementById('dash-btc-price').innerText = `N/A`;
+                 document.getElementById('dash-btc-change').innerHTML = ``;
             }
+            
+            // Ethereum
             if (eth && eth.price > 0) {
                 document.getElementById('dash-eth-price').innerText = `$${formatMoney(eth.price)}`;
                 document.getElementById('dash-eth-change').innerHTML = `<span class="${getChangeColorClass(eth.change)}">${eth.change.toFixed(2)}%</span> (24h)`;
+            } else {
+                 document.getElementById('dash-eth-price').innerText = `N/A`;
+                 document.getElementById('dash-eth-change').innerHTML = ``;
             }
-            if (gold && gold.price > 0) {
-                document.getElementById('dash-gold-price').innerText = `$${formatMoney(gold.price)}`;
-                document.getElementById('dash-gold-change').innerHTML = `<span class="${getChangeColorClass(gold.change)}">${gold.change.toFixed(2)}%</span> (24h)`;
-            }
-             if(sp500) {
-                document.getElementById('dash-sp500-price').innerText = formatMoney(sp500.price);
-                const el = document.getElementById('dash-sp500-change');
-                el.className = `text-sm flex items-center mt-3 font-semibold ${getChangeColorClass(sp500.change)}`;
-                el.innerHTML = `${sp500.change > 0 ? '+' : ''}${sp500.change.toFixed(2)}% <i data-lucide="trending-up" class="w-4 h-4 ml-1"></i>`;
+
+            // EUR/USD
+            if (eurusd && eurusd.rate > 0) {
+                document.getElementById('dash-eurusd-price').innerText = eurusd.rate.toFixed(4);
+            } else {
+                 document.getElementById('dash-eurusd-price').innerText = `N/A`;
             }
         }
 
-        // --- GRAF (Zostáva simulovaný pre plynulosť, ale berie live cenu ako base) ---
+        // --- GRAF (Používa reálnu BTC cenu) ---
         function initChart() {
             const ctx = document.getElementById('btcChart').getContext('2d');
             const gradient = ctx.createLinearGradient(0, 0, 0, 400);
@@ -765,7 +530,7 @@
                 labels: ['60s', '50s', '40s', '30s', '20s', '10s', 'Now'],
                 datasets: [{
                     label: 'BTC Cena (USD)',
-                    data: [64000, 64100, 64200, 64150, 64300, 64250, 64400], // Start data
+                    data: [], // Začíname s prázdnymi dátami, aby sa načítal prvý live bod
                     borderColor: '#3b82f6',
                     backgroundColor: gradient,
                     tension: 0.4,
@@ -793,20 +558,15 @@
             if (!btcChartInstance) return;
             const btc = cryptoData.find(c => c.symbol === 'BTC');
             if (btc && btc.price > 0) {
-                btcChartInstance.data.datasets[0].data.shift();
+                // Posun dát: odstráň najstarší, pridaj najnovší
+                if (btcChartInstance.data.datasets[0].data.length >= 7) {
+                    btcChartInstance.data.datasets[0].data.shift();
+                }
                 btcChartInstance.data.datasets[0].data.push(btc.price);
                 btcChartInstance.update();
             }
         }
         
-        function calculateInvestment() {
-            const years = parseFloat(document.getElementById('years').value);
-            const investment = parseFloat(document.getElementById('investment').value);
-            const futureValue = investment * Math.pow((1 + 0.08), years);
-            document.getElementById('calculator-result').classList.remove('hidden');
-            document.getElementById('result-text').innerText = `$${formatMoney(futureValue)}`;
-        }
-
         // --- INIT ---
         window.onload = function() {
             initChart();
@@ -815,8 +575,8 @@
             // Prvé načítanie
             fetchRealData();
 
-            // Interval aktualizácie: 6 sekúnd (Kompromis medzi "live" a API limitmi)
-            setInterval(fetchRealData, 6000);
+            // Interval aktualizácie: 10 sekúnd (ZMENENÉ NA 10 000 MS)
+            setInterval(fetchRealData, 10000);
         };
 
     </script>
