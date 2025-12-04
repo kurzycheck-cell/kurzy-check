@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>kurzy check | Aktuálne kurzy a Kalkulačka</title>
+    <title>kurzy check | Aktuálne kurzy, krypto a akcie</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
@@ -11,7 +11,7 @@
 
     <header class="header">
         <h1>kurzy check</h1>
-        <p class="tagline">Aktuálne kurzy mien, kryptomien a akcií.</p>
+        <p class="tagline">Aktuálne kurzy mien, kryptomien a akcií v reálnom čase.</p>
     </header>
 
     <main class="container">
@@ -20,36 +20,59 @@
             <div class="calculator">
                 <input type="number" id="inputAmount" placeholder="Zadajte sumu v EUR" value="100">
                 <select id="targetCurrency">
-                    <option value="USD">USD - Americký dolár</option>
-                    <option value="CZK">CZK - Česká koruna</option>
-                    <option value="PLN">PLN - Poľský zlotý</option>
                     </select>
                 <button onclick="calculate()">Prepočítať</button>
-                <p class="result" id="conversionResult">Výsledok: 0.00 USD</p>
+                <p class="result" id="conversionResult">Výsledok: 0.00</p>
             </div>
         </section>
 
-        <section class="rates-section box">
-            <h2>Živé kurzy (EUR ako základ)</h2>
-            <table class="rates-table">
-                <thead>
-                    <tr>
-                        <th>Mena</th>
-                        <th>Názov</th>
-                        <th>Kurz (1 EUR = ?)</th>
-                    </tr>
-                </thead>
-                <tbody id="ratesTableBody">
-                    <tr><td colspan="3">Načítavam dáta...</td></tr>
-                    </tbody>
-            </table>
+        <section class="rates-master-section box">
+            <div class="tabs">
+                <button class="tab-button active" data-asset="fiat" onclick="showAssetClass('fiat')">Meny</button>
+                <button class="tab-button" data-asset="crypto" onclick="showAssetClass('crypto')">Kryptomeny</button>
+                <button class="tab-button" data-asset="stocks" onclick="showAssetClass('stocks')">Akcie</button>
+            </div>
+
+            <div id="fiatRates" class="rates-table-view active">
+                <h2>Živé kurzy mien (EUR základ)</h2>
+                <table class="rates-table">
+                    <thead><tr><th>Mena</th><th>Názov</th><th>Kurz (1 EUR = ?)</th></tr></thead>
+                    <tbody id="fiatTableBody"><tr><td colspan="3">Načítavam dáta...</td></tr></tbody>
+                </table>
+            </div>
+
+            <div id="cryptoRates" class="rates-table-view hidden">
+                <h2>Živé kurzy kryptomien (EUR základ)</h2>
+                 <table class="rates-table">
+                    <thead><tr><th>Symbol</th><th>Názov</th><th>Kurz (1 EUR = ?)</th></tr></thead>
+                    <tbody id="cryptoTableBody"><tr><td colspan="3">Načítavam dáta...</td></tr></tbody>
+                </table>
+            </div>
+
+            <div id="stocksRates" class="rates-table-view hidden">
+                <h2>Ceny akcií (Simulácia)</h2>
+                 <table class="rates-table">
+                    <thead><tr><th>Symbol</th><th>Názov</th><th>Cena (USD)</th></tr></thead>
+                    <tbody id="stocksTableBody"><tr><td colspan="3">Načítavam dáta...</td></tr></tbody>
+                </table>
+            </div>
+
         </section>
     </main>
+    
+    <div id="detailSection" class="detail-section container hidden">
+        <section class="box full-width">
+            <h2 id="detailTitle">Detail kurzu: EUR/USD</h2>
+            <p class="detail-price">Aktuálna Cena: <span id="currentDetailPrice">...</span></p>
+            <canvas id="priceChart"></canvas>
+        </section>
+    </div>
 
     <footer class="footer">
-        <p>&copy; 2025 kurzy check. Všetky dáta z externého API. Všetky práva vyhradené.</p>
+        <p>&copy; 2025 kurzy check. Dáta z API. Všetky práva vyhradené.</p>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
