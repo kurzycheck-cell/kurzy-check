@@ -1,27 +1,27 @@
 /* Resetovanie a základné nastavenia */
 body {
-    font-family: 'Roboto', sans-serif; /* Použitie nového profesionálneho fontu */
+    font-family: 'Roboto', sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f8f9fa; /* Ešte svetlejšia, čistejšia šedá */
-    color: #212529; /* Tmavší text pre lepšiu čitateľnosť */
+    background-color: #f8f9fa; 
+    color: #212529; 
     line-height: 1.6;
 }
 
-/* 🔵 HLAVIČKA (Primárna farba: Silná Modrá) */
+/* Hlavička a Päta - Bez zmien oproti poslednej verzii (je profi) */
 .header {
     background-color: #0079C2;
     color: white;
-    padding: 30px 0; /* Väčšie medzery pre "dýchajúci" dizajn */
+    padding: 30px 0;
     text-align: center;
-    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Jemnejší, ale viditeľný tieň */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
 }
 
 .header h1 {
     margin: 0;
-    font-size: 32px; /* Väčší názov */
+    font-size: 32px;
     font-weight: 700;
-    letter-spacing: 1.5px; /* Jemné rozostupy pre profesionálny pocit */
+    letter-spacing: 1.5px;
 }
 
 .tagline {
@@ -30,7 +30,6 @@ body {
     opacity: 0.9;
 }
 
-/* Päta */
 .footer {
     text-align: center;
     padding: 20px 0;
@@ -40,57 +39,50 @@ body {
     color: #6c757d;
 }
 
-/* Kontajner a boxy */
+/* Kontajner a Boxy */
 .container {
     width: 90%;
-    max-width: 1280px; /* Väčší kontajner */
+    max-width: 1280px; 
     margin: 40px auto;
     display: flex;
-    gap: 40px; /* Väčšia medzera medzi prvkami */
+    gap: 40px; 
 }
 
 .box {
     background-color: white;
-    padding: 30px; /* Viac vnútorného priestoru */
-    border-radius: 8px; /* Jemnejšie rohy */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08); /* Čistejší, jemnejší tieň */
+    padding: 30px; 
+    border-radius: 8px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08); 
     flex: 1;
 }
 
 .box h2 {
     color: #0079C2;
-    border-bottom: 1px solid #dee2e6; /* Jemnejšia linka pod nadpisom */
+    border-bottom: 1px solid #dee2e6;
     padding-bottom: 15px;
     margin-top: 0;
-    font-weight: 400; /* Menej tučný, čistejší nadpis */
+    font-weight: 400;
 }
 
-/* Kalkulačka */
+/* Kalkulačka a Tlačidlo (Red Accent) */
 .calculator input, .calculator select, .calculator button {
     width: 100%;
-    padding: 15px; /* Väčšie vstupné polia */
+    padding: 15px;
     margin-bottom: 18px;
-    border: 1px solid #ced4da; /* Subtílnejší okraj */
+    border: 1px solid #ced4da;
     border-radius: 4px;
     box-sizing: border-box;
     font-size: 16px;
 }
 
-/* 🔴 Tlačidlo Akcie (Červený Akcent) */
 .calculator button {
     background-color: #dc3545; 
     color: white;
     cursor: pointer;
     border: none;
-    transition: background-color 0.3s;
     font-weight: 700;
 }
 
-.calculator button:hover {
-    background-color: #c82333;
-}
-
-/* Výsledok konverzie */
 .result {
     font-size: 22px;
     font-weight: 700;
@@ -102,7 +94,39 @@ body {
     background-color: #e6f7ff;
 }
 
-/* Tabuľka */
+/* 🚀 NOVÉ ŠTÝLY PRE PREPÍNANIE A TABUĽKY */
+.tabs {
+    display: flex;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #dee2e6;
+}
+
+.tab-button {
+    background: none;
+    border: none;
+    padding: 10px 15px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    color: #495057;
+    transition: color 0.3s, border-bottom 0.3s;
+    border-radius: 0; /* Odstránenie predošlých okrajov */
+}
+
+.tab-button:hover:not(.active) {
+    color: #0079C2;
+}
+
+.tab-button.active {
+    color: #0079C2;
+    border-bottom: 3px solid #dc3545; /* Červený akcent na aktívnej záložke */
+}
+
+.rates-table-view.hidden {
+    display: none;
+}
+
+/* Tabuľka - Upravená pre klikateľné riadky */
 .rates-table {
     width: 100%;
     border-collapse: collapse;
@@ -110,7 +134,7 @@ body {
 }
 
 .rates-table th, .rates-table td {
-    padding: 15px; /* Väčšie bunky tabuľky */
+    padding: 15px;
     text-align: left;
     border-bottom: 1px solid #dee2e6;
 }
@@ -118,15 +142,42 @@ body {
 .rates-table th {
     background-color: #0079C2;
     color: white;
-    font-weight: 400; /* Menej tučné hlavičky tabuľky */
+    font-weight: 400;
 }
 
 .rates-table tr:hover {
-    background-color: #f0f3f5; /* Jemný hover efekt */
+    background-color: #f0f3f5;
+    cursor: pointer; /* Naznačuje, že riadok je klikateľný */
 }
 
-/* Responzívny dizajn pre mobily */
-@media (max-width: 992px) { /* Zmenil som breakpoint pre tablety */
+/* 📈 DETAIL SEKCIA (Graf) */
+.detail-section {
+    margin-top: 20px;
+}
+
+.detail-section .box {
+    padding: 30px;
+    width: 100%;
+}
+
+.detail-price {
+    font-size: 24px;
+    font-weight: 700;
+    color: #dc3545;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+
+.full-width {
+    flex: 0 0 100%; /* Aby detail sekcia zaberala plnú šírku */
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Responzívny dizajn */
+@media (max-width: 992px) {
     .container {
         flex-direction: column;
         gap: 30px;
