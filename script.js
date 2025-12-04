@@ -3,8 +3,8 @@
 // ===================================================================
 
 const FIAT_API = 'https://api.frankfurter.app/latest?from=EUR';
-// Používame CoinGecko, ktorý má mierne oneskorenie, ale je spoľahlivý a zadarmo
-const CRYPTO_API = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,cardano,solana,polkadot,dogecoin&vs_currencies=eur';
+// Rozšírený zoznam kryptomien pre CoinGecko
+const CRYPTO_API = 'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,cardano,solana,polkadot,dogecoin,binancecoin,ripple,litecoin&vs_currencies=eur';
 
 let ratesData = {
     fiat: {},
@@ -19,7 +19,7 @@ let priceChart; // Premenná pre inštanciu Chart.js
 
 
 // ===================================================================
-// Funkcie na získavanie dát
+// Funkcie na získavanie dát (Rozšírené verzie)
 // ===================================================================
 
 async function fetchAllData() {
@@ -29,26 +29,8 @@ async function fetchAllData() {
         const fiatData = await fiatResponse.json();
         ratesData.fiat = fiatData.rates;
         ratesData.fiat.EUR = 1; // Pridanie EUR ako základ
-        function updateFiatNames(rates) {
-    // Rozšírený zoznam mien a ich prekladov
-    const knownNames = { 
-        'USD': 'Americký Dolár', 
-        'CZK': 'Česká Koruna', 
-        'PLN': 'Poľský Zlotý', 
-        'GBP': 'Britská Libra', 
-        'CHF': 'Švajčiarsky Frank', 
-        'EUR': 'Euro',
-        'CAD': 'Kanadský Dolár',
-        'AUD': 'Austrálsky Dolár',
-        'JPY': 'Japonský Jen',
-        'NOK': 'Nórska Koruna',
-        'SEK': 'Švédska Koruna',
-        'HUF': 'Maďarský Forint' // Nové meny
-    };
-    for (const symbol in rates) {
-        assetNames[symbol] = knownNames[symbol] || symbol;
-    }
-}
+        updateFiatNames(fiatData.rates);
+    } catch (e) { console.error("Chyba pri načítaní mien:", e); }
 
     // 2. Krypto
     try {
@@ -67,15 +49,39 @@ async function fetchAllData() {
 }
 
 function updateFiatNames(rates) {
-    // Toto je obmedzený preklad, slúži ako simulácia komplexnej databázy
-    const knownNames = { 'USD': 'Americký Dolár', 'CZK': 'Česká Koruna', 'PLN': 'Poľský Zlotý', 'GBP': 'Britská Libra', 'CHF': 'Švajčiarsky Frank', 'EUR': 'Euro' };
+    // Rozšírený zoznam mien a ich prekladov
+    const knownNames = { 
+        'USD': 'Americký Dolár', 
+        'CZK': 'Česká Koruna', 
+        'PLN': 'Poľský Zlotý', 
+        'GBP': 'Britská Libra', 
+        'CHF': 'Švajčiarsky Frank', 
+        'EUR': 'Euro',
+        'CAD': 'Kanadský Dolár',
+        'AUD': 'Austrálsky Dolár',
+        'JPY': 'Japonský Jen',
+        'NOK': 'Nórska Koruna',
+        'SEK': 'Švédska Koruna',
+        'HUF': 'Maďarský Forint'
+    };
     for (const symbol in rates) {
         assetNames[symbol] = knownNames[symbol] || symbol;
     }
 }
 
 function updateCryptoNames(data) {
-    const knownNames = { 'bitcoin': 'Bitcoin', 'ethereum': 'Ethereum', 'cardano': 'Cardano', 'solana': 'Solana', 'polkadot': 'Polkadot', 'dogecoin': 'Dogecoin' };
+    // Rozšírený zoznam krypto mien a ich prekladov
+    const knownNames = { 
+        'bitcoin': 'Bitcoin', 
+        'ethereum': 'Ethereum', 
+        'cardano': 'Cardano', 
+        'solana': 'Solana', 
+        'polkadot': 'Polkadot', 
+        'dogecoin': 'Dogecoin',
+        'binancecoin': 'Binance Coin (BNB)',
+        'ripple': 'Ripple (XRP)',
+        'litecoin': 'Litecoin (LTC)'
+    };
     for (const id in data) {
         const symbol = id.toUpperCase().substring(0, 5); // Zjednodušený symbol
         assetNames[symbol] = knownNames[id] || id;
@@ -92,14 +98,23 @@ function parseCryptoData(data) {
 }
 
 function simulateStockData() {
-    // Akcie meníme každú hodinu, pretože real-time API je platené
-    const stockSymbols = ['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'AMZN'];
+    // Rozšírený zoznam akcií a ich simulácia
+    const stockSymbols = ['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'AMZN', 'NFLX', 'VZ', 'BABA', 'SNE', 'KO'];
     ratesData.stocks = {};
+    
+    // Zjednodušený slovník názvov
+    const stockNames = {
+        'AAPL': 'Apple Inc.', 'MSFT': 'Microsoft Corp.', 'GOOGL': 'Alphabet (Google)', 
+        'TSLA': 'Tesla', 'AMZN': 'Amazon.com', 'NFLX': 'Netflix',
+        'VZ': 'Verizon', 'BABA': 'Alibaba Group', 'SNE': 'Sony Group Corp.', 
+        'KO': 'Coca-Cola Co.'
+    };
+    
     stockSymbols.forEach(symbol => {
         // Simulujeme cenu medzi 100 a 300 USD
         const price = (Math.random() * 200 + 100);
         ratesData.stocks[symbol] = price;
-        assetNames[symbol] = symbol === 'AAPL' ? 'Apple Inc.' : symbol === 'MSFT' ? 'Microsoft' : symbol === 'GOOGL' ? 'Alphabet A' : symbol === 'TSLA' ? 'Tesla' : 'Amazon.com';
+        assetNames[symbol] = stockNames[symbol] || symbol;
     });
 }
 
@@ -136,8 +151,8 @@ function updateCalculatorOptions() {
     const select = document.getElementById('targetCurrency');
     select.innerHTML = ''; // Vyčistenie starých
     
-    // Predvolené meny na konverziu
-    const targetSymbols = ['USD', 'CZK', 'PLN', 'GBP'];
+    // Predvolené meny na konverziu (rozšírené)
+    const targetSymbols = ['USD', 'CZK', 'PLN', 'GBP', 'CHF', 'CAD', 'JPY'];
     targetSymbols.forEach(symbol => {
         const name = assetNames[symbol] || symbol;
         const option = document.createElement('option');
@@ -228,9 +243,12 @@ function startDetailUpdate(symbol, type, unit) {
             const data = await response.json();
             price = data.rates[symbol];
         } else if (type === 'crypto') {
-            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${assetNames[symbol].toLowerCase()}&vs_currencies=eur`);
+            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${assetNames[symbol].toLowerCase().split('(')[0].trim()}&vs_currencies=eur`);
             const data = await response.json();
-            price = data[assetNames[symbol].toLowerCase()].eur;
+            // Upravená logika pre extrahovanie ceny z CoinGecko
+            const id = assetNames[symbol].toLowerCase().split('(')[0].trim().replace(/\s/g, ''); 
+            price = data[id] ? data[id].eur : null;
+            
         } else if (type === 'stocks') {
             // Pre akcie musíme použiť simuláciu
             simulateStockData(); // Aktualizujeme simulované dáta
@@ -300,7 +318,7 @@ function renderChart(symbol, type) {
 // Načíta dáta hneď po spustení
 fetchAllData();
 
-// NOVÉ: Nastaví aktualizáciu všetkých hlavných tabuliek (Meny, Krypto, Akcie) každú minútu (60 sekúnd).
+// Nastaví aktualizáciu všetkých hlavných tabuliek (Meny, Krypto, Akcie) každú minútu (60 sekúnd).
 // Tým zabezpečíme real-time pocit bez prekročenia limitov bezplatných API!
 const MAIN_UPDATE_INTERVAL = 60000; // 60 000 ms = 1 minúta
 setInterval(fetchAllData, MAIN_UPDATE_INTERVAL); 
