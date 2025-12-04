@@ -8,20 +8,22 @@ body {
     line-height: 1.6;
 }
 
-/* Hlavička a päta */
+/* 🔵 HLAVIČKA (Primárna farba: Silná Modrá) */
 .header {
-    background-color: #007bff; /* Modrá farba (často spojená s financiami) */
+    background-color: #0079C2; /* Silná Modrá (podobná cieľovej stránke) */
     color: white;
-    padding: 20px 0;
+    padding: 25px 0;
     text-align: center;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2); /* Výrazný tieň pre 3D efekt */
 }
 
 .header h1 {
     margin: 0;
-    font-size: 24px;
+    font-size: 28px;
+    font-weight: 700; /* Hrubé písmo */
 }
 
+/* Päta */
 .footer {
     text-align: center;
     padding: 15px 0;
@@ -36,48 +38,60 @@ body {
     width: 90%;
     max-width: 1200px;
     margin: 30px auto;
-    display: flex; /* Flexbox pre rozdelenie obsahu */
-    gap: 30px; /* Medzera medzi kalkulačkou a tabuľkou */
+    display: flex;
+    gap: 30px;
 }
 
 .box {
     background-color: white;
     padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-    flex: 1; /* Aby zaberali rovnaké miesto */
+    border-radius: 6px; /* Ostrejšie rohy */
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1); /* Výraznejšie boxy */
+    flex: 1;
+}
+
+.box h2 {
+    color: #0079C2; /* Modré nadpisy */
+    border-bottom: 2px solid #f4f7f9;
+    padding-bottom: 10px;
+    margin-top: 0;
 }
 
 /* Kalkulačka */
 .calculator input, .calculator select, .calculator button {
     width: 100%;
-    padding: 10px;
+    padding: 12px;
     margin-bottom: 15px;
     border: 1px solid #ccc;
     border-radius: 4px;
-    box-sizing: border-box; /* Dôležité pre responzivitu */
+    box-sizing: border-box;
+    font-size: 16px;
 }
 
+/* 🔴 Tlačidlo Akcie (Červený Akcent) */
 .calculator button {
-    background-color: #28a745; /* Zelená farba pre akciu (ako 'kúpiť') */
+    background-color: #dc3545; /* Silná Červená farba pre akciu */
     color: white;
     cursor: pointer;
     border: none;
     transition: background-color 0.3s;
+    font-weight: bold;
 }
 
 .calculator button:hover {
-    background-color: #218838;
+    background-color: #c82333;
 }
 
+/* Výsledok konverzie */
 .result {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: bold;
-    color: #007bff;
+    color: #0079C2; /* Výsledok v hlavnej modrej farbe */
     text-align: center;
-    padding: 10px;
-    border: 1px dashed #007bff50;
+    padding: 15px;
+    border: 2px solid #0079c230;
     border-radius: 4px;
+    background-color: #e6f7ff; /* Veľmi jemné modré pozadie výsledku */
 }
 
 /* Tabuľka */
@@ -94,15 +108,15 @@ body {
 }
 
 .rates-table th {
-    background-color: #f8f9fa;
+    background-color: #0079C2; /* Hlavička tabuľky vo výraznej modrej */
+    color: white;
     font-weight: bold;
-    color: #495057;
 }
 
 /* Responzívny dizajn pre mobily */
 @media (max-width: 768px) {
     .container {
-        flex-direction: column; /* Na mobile sa prvky zaradia pod seba */
+        flex-direction: column;
         gap: 20px;
     }
 }
