@@ -267,23 +267,25 @@
 
         // --- DÁTA ---
         
-        // Predvolené hodnoty (pre fallback, ak sa API nenačíta)
+        // Pôvodné hodnoty (pre fallback, ak sa API nenačíta)
+        // DÔLEŽITÁ ZMENA: Inicializované na null, aby sa pri zlyhaní API nezobrazili staré dummy hodnoty (60000, 3000, 1.0)
         let cryptoData = [
-            { id: "bitcoin", symbol: "BTC", name: "Bitcoin", price: 60000.00, change: 0, cap: "Loading", icon: getIcon('BTC') },
-            { id: "ethereum", symbol: "ETH", name: "Ethereum", price: 3000.00, change: 0, cap: "Loading", icon: getIcon('ETH') },
-            { id: "binancecoin", symbol: "BNB", name: "BNB", price: 500.00, change: 0, cap: "Loading", icon: getIcon('BNB') },
-            { id: "solana", symbol: "SOL", name: "Solana", price: 100.00, change: 0, cap: "Loading", icon: getIcon('SOL') },
-            { id: "ripple", symbol: "XRP", name: "XRP", price: 0.50, change: 0, cap: "Loading", icon: getIcon('XRP') },
+            { id: "bitcoin", symbol: "BTC", name: "Bitcoin", price: null, change: null, cap: "N/A", icon: getIcon('BTC') },
+            { id: "ethereum", symbol: "ETH", name: "Ethereum", price: null, change: null, cap: "N/A", icon: getIcon('ETH') },
+            { id: "binancecoin", symbol: "BNB", name: "BNB", price: null, change: null, cap: "N/A", icon: getIcon('BNB') },
+            { id: "solana", symbol: "SOL", name: "Solana", price: null, change: null, cap: "N/A", icon: getIcon('SOL') },
+            { id: "ripple", symbol: "XRP", name: "XRP", price: null, change: null, cap: "N/A", icon: getIcon('XRP') },
         ];
 
         // Kurzy mien (rozšírené o 3 páry)
+        // DÔLEŽITÁ ZMENA: Inicializované na null.
         let forexData = [
-            { pair: "EUR/USD", rate: 1.0, change: 0, icon: '🇪🇺/🇺🇸' },
-            { pair: "USD/JPY", rate: 150.0, change: 0, icon: '🇺🇸/🇯🇵' },
-            { pair: "GBP/USD", rate: 1.2, change: 0, icon: '🇬🇧/🇺🇸' },
-            { pair: "USD/CAD", rate: 1.35, change: 0, icon: '🇺🇸/🇨🇦' }, 
-            { pair: "USD/CHF", rate: 0.90, change: 0, icon: '🇺🇸/🇨🇭' }, 
-            { pair: "AUD/USD", rate: 0.65, change: 0, icon: '🇦🇺/🇺🇸' }, 
+            { pair: "EUR/USD", rate: null, change: null, icon: '🇪🇺/🇺🇸' },
+            { pair: "USD/JPY", rate: null, change: null, icon: '🇺🇸/🇯🇵' },
+            { pair: "GBP/USD", rate: null, change: null, icon: '🇬🇧/🇺🇸' },
+            { pair: "USD/CAD", rate: null, change: null, icon: '🇺🇸/🇨🇦' }, 
+            { pair: "USD/CHF", rate: null, change: null, icon: '🇺🇸/🇨🇭' }, 
+            { pair: "AUD/USD", rate: null, change: null, icon: '🇦🇺/🇺🇸' }, 
         ];
 
         // --- Core Logika UI ---
@@ -323,7 +325,8 @@
         }
 
         function formatMoney(amount, decimals = 2) {
-            if (amount === undefined || amount === null) return '---';
+            if (amount === undefined || amount === null) return 'N/A';
+            // Ak je to cena, použijeme toLocaleString
             return amount.toLocaleString('en-US', { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
         }
         
@@ -342,14 +345,14 @@
             document.getElementById('forex-status').innerText = 'Načítavam dáta...';
 
             let apiSuccess = false;
+            const API_TIMEOUT_MS = 6000; // ZVÝŠENÉ NA 6 SEKÚND pre lepšiu stabilitu na mobilných sieťach
 
+            // 1. Fetch Crypto (CoinGecko)
             try {
-                // 1. Fetch Crypto (CoinGecko)
                 const cryptoIds = cryptoData.map(c => c.id).join(',');
 
-                // 4s timeout pre mobilné siete
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000); 
+                const timeoutId = setTimeout(() => controller.abort(), API_TIMEOUT_MS); 
 
                 const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${cryptoIds}&vs_currencies=usd&include_24hr_change=true`, {
                     signal: controller.signal
@@ -363,26 +366,32 @@
                 let btcPriceUpdated = false;
                 cryptoData.forEach(coin => {
                     if (data[coin.id]) {
+                        // Úspešné načítanie -> aktualizuj dáta
                         coin.price = data[coin.id].usd;
                         coin.change = data[coin.id].usd_24h_change;
                         coin.cap = "Live"; 
                         if (coin.symbol === 'BTC') btcPriceUpdated = true;
                     } else {
-                        // Ak CoinGecko neodpovie, nastav na N/A
-                        coin.price = null; 
-                        coin.change = null;
+                        // Ak CoinGecko neodpovie, nechaj dáta ako sú (null alebo predchádzajúca hodnota)
                         coin.cap = "N/A";
                     }
                 });
                 if (btcPriceUpdated) {
                     apiSuccess = true;
+                    document.getElementById('crypto-status').innerText = ''; 
                 } else {
-                    document.getElementById('crypto-status').innerText = 'Chyba: Dáta kryptomien nedostupné.';
+                    document.getElementById('crypto-status').innerText = 'Chyba: Dáta kryptomien nedostupné (Mimo limitu API?).';
                 }
 
-                // 2. Fetch Forex (ExchangeRate-API)
+            } catch (error) {
+                console.warn("CoinGecko API zlyhalo:", error);
+                document.getElementById('crypto-status').innerText = 'Chyba pripojenia: Dáta Kryptomien nedostupné.';
+            }
+
+            // 2. Fetch Forex (ExchangeRate-API)
+            try {
                 const controllerFx = new AbortController();
-                const timeoutFx = setTimeout(() => controllerFx.abort(), 4000);
+                const timeoutFx = setTimeout(() => controllerFx.abort(), API_TIMEOUT_MS);
                 
                 // Fetch USD rates
                 const forexRes = await fetch('https://api.exchangerate-api.com/v4/latest/USD', {
@@ -396,28 +405,30 @@
                 const rates = fxData.rates;
 
                 // Aktualizácia kurzov:
-                forexData[0].rate = 1 / rates.EUR; // EUR/USD = 1 / (USD/EUR)
-                forexData[1].rate = rates.JPY;     // USD/JPY
-                forexData[2].rate = 1 / rates.GBP; // GBP/USD = 1 / (USD/GBP)
-                forexData[3].rate = rates.CAD;     // USD/CAD
-                forexData[4].rate = rates.CHF;     // USD/CHF
-                forexData[5].rate = 1 / rates.AUD; // AUD/USD = 1 / (USD/AUD)
+                forexData[0].rate = rates.EUR ? (1 / rates.EUR) : null; // EUR/USD
+                forexData[1].rate = rates.JPY || null;                  // USD/JPY
+                forexData[2].rate = rates.GBP ? (1 / rates.GBP) : null; // GBP/USD
+                forexData[3].rate = rates.CAD || null;                  // USD/CAD
+                forexData[4].rate = rates.CHF || null;                  // USD/CHF
+                forexData[5].rate = rates.AUD ? (1 / rates.AUD) : null; // AUD/USD
 
                 document.getElementById('forex-status').innerText = ''; // Vymaž status po úspechu
 
             } catch (error) {
-                console.warn("API nedostupné (Mobile/Network). Zostávam na default hodnotách:", error);
-                document.getElementById('live-indicator').classList.remove('flex');
-                document.getElementById('live-indicator').classList.add('hidden');
-                document.getElementById('crypto-status').innerText = 'Chyba pripojenia: Skontrolujte internet.';
-                document.getElementById('forex-status').innerText = 'Chyba pripojenia: Skontrolujte internet.';
+                console.warn("Forex API zlyhalo:", error);
+                document.getElementById('forex-status').innerText = 'Chyba pripojenia: Dáta Mien nedostupné.';
             }
 
             // Render
             renderAll();
             updateDashboardValues();
             if(apiSuccess) {
+                 // Graf aktualizujeme len, ak sa podarilo stiahnuť novú cenu BTC
                  updateChart();
+            } else {
+                 // Ak API zlyhalo, skry indikátor LIVE
+                 document.getElementById('live-indicator').classList.remove('flex');
+                 document.getElementById('live-indicator').classList.add('hidden');
             }
             
             // Skry loader
@@ -435,7 +446,7 @@
             const limitedCryptoData = cryptoData.slice(0, 5); 
 
             limitedCryptoData.forEach((coin, index) => {
-                const priceText = coin.price ? `$${formatMoney(coin.price, coin.price < 1 ? 5 : 2)}` : 'N/A';
+                const priceText = coin.price ? `$${formatMoney(coin.price, coin.price < 10 ? 5 : 2)}` : 'N/A';
                 const changeText = coin.change !== null ? `${coin.change > 0 ? '+' : ''}${coin.change.toFixed(2)}%` : 'N/A';
                 const changeClass = coin.change !== null ? getChangeColorClass(coin.change) : 'text-slate-400';
 
@@ -458,8 +469,8 @@
                 `;
                 tbody.appendChild(tr);
             });
-            if (limitedCryptoData.length === 0) {
-                 document.getElementById('crypto-status').innerText = 'Chyba: Dáta kryptomien nedostupné.';
+            if (limitedCryptoData.length === 0 || limitedCryptoData.every(c => c.price === null)) {
+                 document.getElementById('crypto-status').innerText = 'Dáta Kryptomien nie sú dostupné. Skontrolujte pripojenie.';
             }
         }
 
@@ -467,6 +478,7 @@
             const container = document.getElementById('forex-list');
             container.innerHTML = '';
             forexData.forEach(pair => {
+                const rateText = pair.rate !== null ? pair.rate.toFixed(4) : 'N/A';
                 const div = document.createElement('div');
                 div.className = 'bg-card-hover/50 p-4 rounded-xl border border-card-hover flex justify-between items-center transition hover:bg-card-hover';
                 div.innerHTML = `
@@ -475,12 +487,15 @@
                         <span class="font-bold text-white">${pair.pair}</span>
                     </div>
                     <div class="text-right">
-                        <p class="font-mono text-white text-lg">${pair.rate.toFixed(4)}</p>
+                        <p class="font-mono text-white text-lg">${rateText}</p>
                         <p class="text-xs font-bold text-slate-400">Live Rate</p>
                     </div>
                 `;
                 container.appendChild(div);
             });
+            if (forexData.every(f => f.rate === null)) {
+                 document.getElementById('forex-status').innerText = 'Dáta Mien nie sú dostupné. Skontrolujte pripojenie.';
+            }
         }
         
         function renderAll() {
@@ -494,7 +509,7 @@
             const eurusd = forexData.find(f => f.pair === 'EUR/USD');
 
             // Bitcoin
-            if (btc && btc.price > 0) {
+            if (btc && btc.price !== null) {
                 document.getElementById('dash-btc-price').innerText = `$${formatMoney(btc.price)}`;
                 document.getElementById('dash-btc-change').innerHTML = `<span class="${getChangeColorClass(btc.change)}">${btc.change.toFixed(2)}%</span> (24h)`;
             } else {
@@ -503,7 +518,7 @@
             }
             
             // Ethereum
-            if (eth && eth.price > 0) {
+            if (eth && eth.price !== null) {
                 document.getElementById('dash-eth-price').innerText = `$${formatMoney(eth.price)}`;
                 document.getElementById('dash-eth-change').innerHTML = `<span class="${getChangeColorClass(eth.change)}">${eth.change.toFixed(2)}%</span> (24h)`;
             } else {
@@ -512,7 +527,7 @@
             }
 
             // EUR/USD
-            if (eurusd && eurusd.rate > 0) {
+            if (eurusd && eurusd.rate !== null) {
                 document.getElementById('dash-eurusd-price').innerText = eurusd.rate.toFixed(4);
             } else {
                  document.getElementById('dash-eurusd-price').innerText = `N/A`;
@@ -557,7 +572,7 @@
         function updateChart() {
             if (!btcChartInstance) return;
             const btc = cryptoData.find(c => c.symbol === 'BTC');
-            if (btc && btc.price > 0) {
+            if (btc && btc.price !== null) {
                 // Posun dát: odstráň najstarší, pridaj najnovší
                 if (btcChartInstance.data.datasets[0].data.length >= 7) {
                     btcChartInstance.data.datasets[0].data.shift();
@@ -575,7 +590,7 @@
             // Prvé načítanie
             fetchRealData();
 
-            // Interval aktualizácie: 10 sekúnd (ZMENENÉ NA 10 000 MS)
+            // Interval aktualizácie: 10 sekúnd
             setInterval(fetchRealData, 10000);
         };
 
