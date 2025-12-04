@@ -3,13 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kurzy Mien a Krypta - KODEX</title>
+    <title>Kurzy a Kalkulačka - KODEX Finance</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Načítavam kurzy...</h1>
-    <div id="data-container">
-        </div>
+
+    <header class="header">
+        <h1>KODEX FINANCE | Aktuálne Kurzy & Kalkulačka</h1>
+    </header>
+
+    <main class="container">
+        <section class="calculator-section box">
+            <h2>Rýchla konverzia mien (EUR na ...)</h2>
+            <div class="calculator">
+                <input type="number" id="inputAmount" placeholder="Zadajte sumu v EUR" value="100">
+                <select id="targetCurrency">
+                    <option value="USD">USD - Americký dolár</option>
+                    <option value="CZK">CZK - Česká koruna</option>
+                    <option value="PLN">PLN - Poľský zlotý</option>
+                    </select>
+                <button onclick="calculate()">Prepočítať</button>
+                <p class="result" id="conversionResult">Výsledok: 0.00 USD</p>
+            </div>
+        </section>
+
+        <section class="rates-section box">
+            <h2>Živé kurzy (EUR ako základ)</h2>
+            <table class="rates-table">
+                <thead>
+                    <tr>
+                        <th>Mena</th>
+                        <th>Názov</th>
+                        <th>Kurz (1 EUR = ?)</th>
+                    </tr>
+                </thead>
+                <tbody id="ratesTableBody">
+                    <tr><td colspan="3">Načítavam dáta...</td></tr>
+                    </tbody>
+            </table>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <p>&copy; 2025 KODEX Finance. Dáta z API. Všetky práva vyhradené.</p>
+    </footer>
+
     <script src="script.js"></script>
 </body>
 </html>
