@@ -16,13 +16,18 @@
 
     <main class="container">
         <section class="calculator-section box">
-            <h2>Rýchla konverzia mien (EUR na ...)</h2>
+            <h2>Univerzálna Kalkulačka Aktív</h2>
             <div class="calculator">
-                <input type="number" id="inputAmount" placeholder="Zadajte sumu v EUR" value="100">
-                <select id="targetCurrency">
-                    </select>
+                <input type="number" id="inputAmount" placeholder="Zadajte sumu" value="100">
+                
+                <div class="asset-selectors">
+                    <select id="fromAsset"></select>
+                    <span class="swap-icon" onclick="swapAssets()">🔄</span>
+                    <select id="toAsset"></select>
+                </div>
+                
                 <button onclick="calculate()">Prepočítať</button>
-                <p class="result" id="conversionResult">Výsledok: 0.00</p>
+                <p class="result" id="conversionResult">Výsledok: 0.00 EUR</p>
             </div>
         </section>
 
