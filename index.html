@@ -6,6 +6,12 @@
     <title>kurzy check | Aktuálne kurzy, krypto a akcie</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+    <!-- Pridáme Tailwind CSS pre moderné štýly (voliteľné, ale odporúčané pre rýchly styling) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Konfigurácia Tailwind pre základný font */
+        body { font-family: 'Roboto', sans-serif; }
+    </style>
 </head>
 <body>
 
@@ -15,13 +21,17 @@
     </header>
 
     <main class="container">
+        <!-- Sekcia Kalkulačka - TERAZ UNIVERZÁLNA -->
         <section class="calculator-section box">
             <h2>Univerzálna Kalkulačka Aktív</h2>
             <div class="calculator">
+                <!-- Vstupná suma -->
                 <input type="number" id="inputAmount" placeholder="Zadajte sumu" value="100">
                 
+                <!-- Univerzálna štruktúra pre dve roletky (Z/Na) s tlačidlom prehodenia -->
                 <div class="asset-selectors">
                     <select id="fromAsset"></select>
+                    <!-- Ikonka pre prehodenie (volá funkciu swapAssets z script.js) -->
                     <span class="swap-icon" onclick="swapAssets()">🔄</span>
                     <select id="toAsset"></select>
                 </div>
@@ -48,7 +58,7 @@
 
             <div id="cryptoRates" class="rates-table-view hidden">
                 <h2>Živé kurzy kryptomien (EUR základ)</h2>
-                 <table class="rates-table">
+                   <table class="rates-table">
                     <thead><tr><th>Symbol</th><th>Názov</th><th>Kurz (1 EUR = ?)</th></tr></thead>
                     <tbody id="cryptoTableBody"><tr><td colspan="3">Načítavam dáta...</td></tr></tbody>
                 </table>
@@ -56,7 +66,7 @@
 
             <div id="stocksRates" class="rates-table-view hidden">
                 <h2>Ceny akcií (Simulácia)</h2>
-                 <table class="rates-table">
+                   <table class="rates-table">
                     <thead><tr><th>Symbol</th><th>Názov</th><th>Cena (USD)</th></tr></thead>
                     <tbody id="stocksTableBody"><tr><td colspan="3">Načítavam dáta...</td></tr></tbody>
                 </table>
@@ -65,6 +75,7 @@
         </section>
     </main>
     
+    <!-- Sekcia Detailu -->
     <div id="detailSection" class="detail-section container hidden">
         <section class="box full-width">
             <h2 id="detailTitle">Detail kurzu: EUR/USD</h2>
@@ -77,7 +88,9 @@
         <p>&copy; 2025 kurzy check. Dáta z API. Všetky práva vyhradené.</p>
     </footer>
 
+    <!-- Externé knižnice -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <!-- Hlavný JavaScript súbor -->
     <script src="script.js"></script>
 </body>
 </html>
