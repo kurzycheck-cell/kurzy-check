@@ -19,7 +19,7 @@ let priceChart; // Premenná pre inštanciu Chart.js
 
 
 // ===================================================================
-// Funkcie na získavanie dát (Rozšírené verzie)
+// Funkcie na získavanie dát
 // ===================================================================
 
 async function fetchAllData() {
@@ -45,7 +45,7 @@ async function fetchAllData() {
 
     // 4. Aktualizácia zobrazenia
     renderActiveTable();
-    updateCalculatorOptions();
+    updateCalculatorOptions(); // Zavolanie funkcie na aktualizáciu roliet
 }
 
 function updateFiatNames(rates) {
@@ -128,14 +128,12 @@ function renderActiveTable() {
     tableBody.innerHTML = '';
     const currentRates = ratesData[activeAsset];
 
-    // Akcie a meny majú rôzne symboly a základ
     let currencySymbol = activeAsset === 'stocks' ? 'USD' : 'EUR';
 
     for (const symbol in currentRates) {
         const name = assetNames[symbol] || symbol;
         const rate = currentRates[symbol];
         
-        // Zabezpečí, že riadky sú klikateľné a nesú dáta
         const row = `
             <tr onclick="showDetail('${symbol}', '${activeAsset}')">
                 <td>${symbol}</td>
@@ -147,19 +145,66 @@ function renderActiveTable() {
     }
 }
 
-function updateCalculatorOptions() {
-    const select = document.getElementById('targetCurrency');
-    select.innerHTML = ''; // Vyčistenie starých
+// NOVÁ FUNKCIA: Načítanie všetkých aktív pre roletky
+function getAllAssetsForSelect() {
+    const allAssets = [];
     
-    // Predvolené meny na konverziu (rozšírené)
-    const targetSymbols = ['USD', 'CZK', 'PLN', 'GBP', 'CHF', 'CAD', 'JPY'];
-    targetSymbols.forEach(symbol => {
-        const name = assetNames[symbol] || symbol;
-        const option = document.createElement('option');
-        option.value = symbol;
-        option.textContent = `${symbol} - ${name}`;
-        select.appendChild(option);
+    // 1. Meny (Fiat)
+    for (const symbol in ratesData.fiat) {
+        // Kurz EUR je 1, ale nechceme ho prepočítavať z 1/X
+        if (symbol !== 'EUR') {
+            allAssets.push({ symbol: symbol, name: assetNames[symbol], type: 'Fiat' });
+        }
+    }
+    // Pridáme EUR samostatne
+    allAssets.push({ symbol: 'EUR', name: assetNames['EUR'], type: 'Fiat' });
+
+    // 2. Kryptomeny
+    for (const symbol in ratesData.crypto) {
+        allAssets.push({ symbol: symbol, name: assetNames[symbol], type: 'Krypto' });
+    }
+    // 3. Akcie (Simulované)
+    for (const symbol in ratesData.stocks) {
+        allAssets.push({ symbol: symbol, name: assetNames[symbol], type: 'Akcie' });
+    }
+
+    // Abecedné zoradenie pre profesionálny vzhľad
+    return allAssets.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// UPRAVENÁ FUNKCIA: Aktualizácia univerzálnych roletiek
+function updateCalculatorOptions() {
+    const fromSelect = document.getElementById('fromAsset');
+    const toSelect = document.getElementById('toAsset');
+    
+    // Ak HTML prvky neexistujú (napr. chyba pri načítaní), ukončíme
+    if (!fromSelect || !toSelect) return;
+
+    // Vyčistenie starých hodnôt
+    fromSelect.innerHTML = '';
+    toSelect.innerHTML = '';
+
+    const assets = getAllAssetsForSelect();
+    
+    // Vytvorenie roletiek
+    assets.forEach(asset => {
+        // Pridanie kategórie do názvu pre lepšiu prehľadnosť
+        const optionText = `${asset.symbol} - ${asset.name} (${asset.type})`;
+
+        const fromOption = document.createElement('option');
+        fromOption.value = asset.symbol;
+        fromOption.textContent = optionText;
+        fromSelect.appendChild(fromOption);
+
+        const toOption = document.createElement('option');
+        toOption.value = asset.symbol;
+        toOption.textContent = optionText;
+        toSelect.appendChild(toOption);
     });
+
+    // Nastavenie predvolených hodnôt (napr. EUR na USD)
+    fromSelect.value = 'EUR';
+    toSelect.value = 'USD';
     
     // Spustenie prvého prepočtu
     calculate();
@@ -191,26 +236,74 @@ function showAssetClass(assetType) {
 }
 
 
-// Funkcia pre kalkulačku (volaná z index.html)
+// UPRAVENÁ FUNKCIA: Funkcia pre univerzálnu kalkulačku
 function calculate() {
     const inputAmount = parseFloat(document.getElementById('inputAmount').value);
-    const targetCurrency = document.getElementById('targetCurrency').value;
+    const fromAsset = document.getElementById('fromAsset').value;
+    const toAsset = document.getElementById('toAsset').value;
     const resultElement = document.getElementById('conversionResult');
 
     if (isNaN(inputAmount) || inputAmount <= 0) {
-        resultElement.textContent = "Zadajte platnú sumu v EUR.";
+        resultElement.textContent = "Zadajte platnú sumu.";
         return;
     }
     
-    // Kurzy berieme z FIAT dát
-    const rate = ratesData.fiat[targetCurrency];
+    // 1. Získanie jednotného kurzu Z aktíva voči EUR (1 jednotka FROM = X EUR)
+    const getRateInEUR = (symbol) => {
+        // Skúsime Fiat
+        if (ratesData.fiat[symbol]) {
+            // Frankuter API dáva 1 EUR = X meny, my chceme 1 mena = X EUR (okrem EUR, kde je kurz 1)
+            return (symbol === 'EUR') ? 1 : 1 / ratesData.fiat[symbol];
+        } 
+        // Skúsime Crypto
+        if (ratesData.crypto[symbol]) {
+            // Krypto API dáva priamo 1 krypto = X EUR
+            return ratesData.crypto[symbol];
+        }
+        // Skúsime Akcie (sú v USD, musíme prepočítať cez EUR/USD)
+        if (ratesData.stocks[symbol] && ratesData.fiat['USD']) {
+            const priceUSD = ratesData.stocks[symbol];
+            const EUR_to_USD_Rate = ratesData.fiat['USD'];
+            // 1 akcia (USD) / EUR/USD kurz = cena akcie v EUR
+            return priceUSD / EUR_to_USD_Rate;
+        }
+        return 0;
+    };
     
-    if (rate) {
-        const convertedAmount = inputAmount * rate;
-        resultElement.textContent = `Výsledok: ${convertedAmount.toFixed(2)} ${targetCurrency}`;
-    } else {
-        resultElement.textContent = "Kurz nie je k dispozícii.";
+    const fromRateInEUR = getRateInEUR(fromAsset);
+    const toRateInEUR = getRateInEUR(toAsset);
+
+    if (fromRateInEUR === 0 || toRateInEUR === 0) {
+        resultElement.textContent = `Kurz pre ${fromAsset} alebo ${toAsset} nie je k dispozícii.`;
+        return;
     }
+    
+    // === VÝPOČET ===
+    
+    // 1. Prevod vstupnej sumy na základnú menu (EUR):
+    const amountInEUR = inputAmount * fromRateInEUR;
+    
+    // 2. Prevod z EUR na cieľové aktívum:
+    const convertedAmount = amountInEUR / toRateInEUR;
+    
+    // === VÝSLEDNÝ TEXT ===
+    
+    const toAssetName = assetNames[toAsset] || toAsset;
+    
+    resultElement.textContent = `Výsledok: ${convertedAmount.toFixed(4)} ${toAsset} (${toAssetName})`;
+}
+
+// NOVÁ FUNKCIA: Prehodenie Z a NA
+function swapAssets() {
+    const fromSelect = document.getElementById('fromAsset');
+    const toSelect = document.getElementById('toAsset');
+    
+    const tempValue = fromSelect.value;
+    fromSelect.value = toSelect.value;
+    toSelect.value = tempValue;
+    
+    // Po prehodení opäť prepočítame
+    calculate();
 }
 
 
@@ -234,7 +327,6 @@ function showDetail(symbol, type) {
 
 // Real-Time 5-sekundová aktualizácia (len detail)
 function startDetailUpdate(symbol, type, unit) {
-    // Vnorená funkcia na získanie aktuálnej ceny (pretože API volanie sa líši)
     const updatePrice = async () => {
         let price = null;
 
@@ -243,10 +335,12 @@ function startDetailUpdate(symbol, type, unit) {
             const data = await response.json();
             price = data.rates[symbol];
         } else if (type === 'crypto') {
-            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${assetNames[symbol].toLowerCase().split('(')[0].trim()}&vs_currencies=eur`);
+            // Upravená logika pre extrahovanie ID krypto
+            const assetName = assetNames[symbol].toLowerCase().split('(')[0].trim();
+            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${assetName}&vs_currencies=eur`);
             const data = await response.json();
-            // Upravená logika pre extrahovanie ceny z CoinGecko
-            const id = assetNames[symbol].toLowerCase().split('(')[0].trim().replace(/\s/g, ''); 
+            
+            const id = Object.keys(data)[0]; // Získa ID, ktoré CoinGecko vrátilo
             price = data[id] ? data[id].eur : null;
             
         } else if (type === 'stocks') {
@@ -319,7 +413,6 @@ function renderChart(symbol, type) {
 fetchAllData();
 
 // Nastaví aktualizáciu všetkých hlavných tabuliek (Meny, Krypto, Akcie) každú minútu (60 sekúnd).
-// Tým zabezpečíme real-time pocit bez prekročenia limitov bezplatných API!
 const MAIN_UPDATE_INTERVAL = 60000; // 60 000 ms = 1 minúta
 setInterval(fetchAllData, MAIN_UPDATE_INTERVAL); 
 
