@@ -75,12 +75,46 @@ body {
     font-size: 16px;
 }
 
+/* ========================================================== */
+/* UNIVERZÁLNA KALKULAČKA - NOVÉ ŠTÝLY PRE DVE ROLETKY */
+/* ========================================================== */
+.asset-selectors {
+    display: flex; /* Použitie Flexboxu pre usporiadanie Z/Na + ikona */
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.asset-selectors select {
+    flex: 1; /* Aby obe roletky zaberali rovnaké miesto a boli flexibilné */
+    width: auto; /* Prepíše šírku 100% z .calculator select */
+    margin-bottom: 0; /* Odstráni margin, aby bol riadok kompaktný */
+}
+
+.swap-icon {
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 5px;
+    color: #0079C2;
+    transition: transform 0.2s;
+}
+
+.swap-icon:active {
+    transform: scale(0.9);
+}
+/* ========================================================== */
+
 .calculator button {
     background-color: #dc3545; 
     color: white;
     cursor: pointer;
     border: none;
     font-weight: 700;
+    transition: background-color 0.2s;
+}
+
+.calculator button:hover {
+    background-color: #c82333;
 }
 
 .result {
@@ -94,7 +128,7 @@ body {
     background-color: #e6f7ff;
 }
 
-/* 🚀 NOVÉ ŠTÝLY PRE PREPÍNANIE A TABUĽKY */
+/* 🚀 ŠTÝLY PRE PREPÍNANIE A TABUĽKY */
 .tabs {
     display: flex;
     margin-bottom: 20px;
@@ -110,7 +144,7 @@ body {
     cursor: pointer;
     color: #495057;
     transition: color 0.3s, border-bottom 0.3s;
-    border-radius: 0; /* Odstránenie predošlých okrajov */
+    border-radius: 0; 
 }
 
 .tab-button:hover:not(.active) {
@@ -182,29 +216,4 @@ body {
         flex-direction: column;
         gap: 30px;
     }
-}
-/* Univerzálna Kalkulačka - Štýly */
-.asset-selectors {
-    display: flex;
-    align-items: center;
-    gap: 5px;
-    margin-bottom: 15px;
-}
-
-.asset-selectors select {
-    flex: 1; /* Aby obe roletky zaberali rovnaké miesto */
-    /* Zdedí štýly z .calculator select */
-}
-
-.swap-icon {
-    font-size: 20px;
-    cursor: pointer;
-    padding: 0 5px;
-    color: #0079C2;
-}
-
-/* Prípadné úpravy existujúcich selektorov (pre istotu) */
-.calculator select {
-    width: auto; /* Zrušíme 100% šírku, lebo ju riadi flexbox */
-    margin-bottom: 0;
 }
