@@ -3,94 +3,812 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>kurzy check | Aktuálne kurzy, krypto a akcie</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    <!-- Pridáme Tailwind CSS pre moderné štýly (voliteľné, ale odporúčané pre rýchly styling) -->
+    <title>Kurzy-check: Prémiový Investičný Dashboard</title>
+    <!-- Načítanie Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Načítanie Chart.js pre vizualizáciu -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <!-- Načítanie Lucide Icons pre moderné ikony (SVG) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <script>
+        // Konfigurácia Tailwind CSS pre moderný tmavý dizajn
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'bg-main': '#0f172a', // Slate-900
+                        'card-bg': '#1e293b', // Slate-800 - Hlavné pozadie kariet
+                        'card-hover': '#334155', // Slate-700 - Hover efekt
+                        'accent-primary': '#3b82f6', // Blue-500 - Pre navigáciu/hlavný fokus
+                        'up-green': '#10b981', // Emerald-500 - Zelená pre rast
+                        'down-red': '#ef4444', // Red-500 - Červená pre pokles
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- Vlastný CSS pre prvky, ktoré nemôže pokryť Tailwind -->
     <style>
-        /* Konfigurácia Tailwind pre základný font */
-        body { font-family: 'Roboto', sans-serif; }
+        /* Základný štýl pre body a font */
+        body {
+            background-color: #0f172a;
+            color: #e2e8f0; /* Svetlejší text pre tmavé pozadie */
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Vylepšený štýl pre záložky (navigácia) */
+        .tab-button {
+            display: inline-block;
+            padding: 0.75rem 1.25rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            color: #94a3b8; /* text-slate-400 */
+            white-space: nowrap;
+            cursor: pointer;
+        }
+        .tab-button:hover {
+            color: #f1f5f9; /* text-slate-100 */
+        }
+        .tab-button.active {
+            color: #3b82f6; /* accent-primary */
+            border-color: #3b82f6; /* accent-primary */
+        }
+        
+        /* Štýl pre tabuľky a riadky */
+        .data-row {
+            transition: background-color 0.15s;
+            cursor: pointer;
+        }
+        .data-row:hover {
+            background-color: rgba(51, 65, 85, 0.5); /* card-hover/50 */
+        }
+
+        /* Kontajner pre tabulku s gradientom pre lepšiu viditeľnosť scrollu na mobile */
+        .table-container {
+            position: relative;
+        }
+        /* Gradient naľavo */
+        .table-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 20px;
+            pointer-events: none;
+            background: linear-gradient(to right, #1e293b 0%, rgba(30, 41, 59, 0) 100%);
+        }
+        /* Gradient napravo */
+        .table-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 100%;
+            width: 20px;
+            pointer-events: none;
+            background: linear-gradient(to left, #1e293b 0%, rgba(30, 41, 59, 0) 100%);
+        }
+
     </style>
 </head>
-<body>
+<body class="min-h-screen p-4 sm:p-8">
 
-    <header class="header">
-        <h1>kurzy check</h1>
-        <p class="tagline">Aktuálne kurzy mien, kryptomien a akcií v reálnom čase.</p>
-    </header>
+    <!-- Hlavný kontajner aplikácie -->
+    <div id="app" class="max-w-7xl mx-auto">
+        
+        <!-- TOP NAVIGÁCIA (Domov / O nás) -->
+        <header class="flex justify-between items-center mb-6 border-b border-card-hover pb-4">
+            <h1 class="text-3xl font-extrabold text-accent-primary tracking-tight">Kurzy-check</h1>
+            <nav>
+                <button onclick="navigate('home')" id="nav-home" class="px-3 py-1 text-sm font-semibold rounded-lg transition duration-200 bg-accent-primary text-white shadow-lg shadow-accent-primary/30 mr-2">
+                    Domov
+                </button>
+                <button onclick="navigate('about')" id="nav-about" class="px-3 py-1 text-sm font-semibold rounded-lg transition duration-200 text-slate-300 hover:bg-card-hover">
+                    O nás
+                </button>
+            </nav>
+        </header>
 
-    <main class="container">
-        <!-- Sekcia Kalkulačka - TERAZ UNIVERZÁLNA -->
-        <section class="calculator-section box">
-            <h2>Univerzálna Kalkulačka Aktív</h2>
-            <div class="calculator">
-                <!-- Vstupná suma -->
-                <input type="number" id="inputAmount" placeholder="Zadajte sumu" value="100">
-                
-                <!-- Univerzálna štruktúra pre dve roletky (Z/Na) s tlačidlom prehodenia -->
-                <div class="asset-selectors">
-                    <select id="fromAsset"></select>
-                    <!-- Ikonka pre prehodenie (volá funkciu swapAssets z script.js) -->
-                    <span class="swap-icon" onclick="swapAssets()">🔄</span>
-                    <select id="toAsset"></select>
+        <!-- Obsah (VIEWS) - Zobrazený len pri 'Domov' -->
+        <div id="main-content">
+            <!-- Sekcia pre záložky (Krypto, Akcie, Komodity, atď.) -->
+            <nav class="mb-8 overflow-x-auto">
+                <div class="flex border-b border-card-hover" id="main-tabs">
+                    <button onclick="showView('dashboard')" class="tab-button active" data-view="dashboard">Dashboard</button>
+                    <button onclick="showView('crypto')" class="tab-button" data-view="crypto">Kryptomeny</button>
+                    <button onclick="showView('stocks')" class="tab-button" data-view="stocks">Akcie</button>
+                    <button onclick="showView('commodities')" class="tab-button" data-view="commodities">Komodity</button>
+                    <button onclick="showView('metals')" class="tab-button" data-view="metals">Drahé Kovy</button>
+                    <button onclick="showView('bonds')" class="tab-button" data-view="bonds">Dlhopisy</button>
+                    <button onclick="showView('forex')" class="tab-button" data-view="forex">Kurzy Mien (Forex)</button>
+                    <button onclick="showView('calculator')" class="tab-button" data-view="calculator">Investičná Kalkulačka</button>
+                </div>
+            </nav>
+
+            <div id="views">
+                <!-- 1. DASHBOARD VIEW -->
+                <div id="dashboard" class="view-content">
+                    <h2 class="text-3xl font-bold mb-6 text-slate-100">Aktuálne Trhové Súhrny</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                        <!-- Karta 1: Celková Krypto Kap. -->
+                        <div class="bg-card-bg p-6 rounded-2xl shadow-xl border border-card-hover transition duration-300 hover:scale-[1.02]">
+                            <p class="text-sm text-slate-400">Celková Krypto Kap.</p>
+                            <p class="text-3xl font-bold mt-2 text-white">$2.5T</p>
+                            <span class="text-up-green text-sm flex items-center mt-3 font-semibold">
+                                +3.45% (24h)
+                                <i data-lucide="trending-up" class="w-4 h-4 ml-1"></i>
+                            </span>
+                        </div>
+                        <!-- Karta 2: Dominancia BTC -->
+                        <div class="bg-card-bg p-6 rounded-2xl shadow-xl border border-card-hover transition duration-300 hover:scale-[1.02]">
+                            <p class="text-sm text-slate-400">Dominancia BTC</p>
+                            <p class="text-3xl font-bold mt-2 text-white">52.1%</p>
+                            <span class="text-down-red text-sm flex items-center mt-3 font-semibold">
+                                -0.12% (24h)
+                                <i data-lucide="trending-down" class="w-4 h-4 ml-1"></i>
+                            </span>
+                        </div>
+                        <!-- Karta 3: Zlato (Komodita) -->
+                        <div class="bg-card-bg p-6 rounded-2xl shadow-xl border border-card-hover transition duration-300 hover:scale-[1.02]">
+                            <p class="text-sm text-slate-400">Zlato (XAU/USD)</p>
+                            <p class="text-3xl font-bold mt-2 text-white">$2,325.50</p>
+                            <span class="text-up-green text-sm flex items-center mt-3 font-semibold">
+                                +0.89% (Dnes)
+                                <i data-lucide="trending-up" class="w-4 h-4 ml-1"></i>
+                            </span>
+                        </div>
+                        <!-- Karta 4: S&P 500 Index -->
+                        <div class="bg-card-bg p-6 rounded-2xl shadow-xl border border-card-hover transition duration-300 hover:scale-[1.02]">
+                            <p class="text-sm text-slate-400">S&P 500 Index</p>
+                            <p class="text-3xl font-bold mt-2 text-white">5,123.45</p>
+                            <span class="text-up-green text-sm flex items-center mt-3 font-semibold">
+                                +1.01% (Dnes)
+                                <i data-lucide="trending-up" class="w-4 h-4 ml-1"></i>
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Graf -->
+                    <div class="bg-card-bg p-6 rounded-2xl shadow-xl border border-card-hover">
+                        <h3 class="text-xl font-semibold mb-4 text-slate-200">Vývoj BTC Ceny (7 dní - Mock)</h3>
+                        <div class="h-80">
+                            <canvas id="btcChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. KRYPTOMENY VIEW -->
+                <div id="crypto" class="view-content hidden">
+                    <h2 class="text-2xl font-semibold mb-4 text-slate-200">Top Kryptomeny</h2>
+                    <div class="bg-card-bg p-4 rounded-2xl shadow-xl border border-card-hover table-container overflow-x-auto">
+                        <table class="min-w-full divide-y divide-card-hover">
+                            <thead>
+                                <tr class="text-left text-slate-400">
+                                    <th class="py-3 px-4 font-semibold">#</th>
+                                    <th class="py-3 px-4 font-semibold">Mena</th>
+                                    <th class="py-3 px-4 font-semibold">Cena (USD)</th>
+                                    <th class="py-3 px-4 font-semibold">24h Zmena</th>
+                                    <th class="py-3 px-4 font-semibold hidden sm:table-cell">Kapitalizácia</th>
+                                </tr>
+                            </thead>
+                            <tbody id="crypto-list" class="divide-y divide-card-hover">
+                                <!-- Dáta sa vložia cez JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 3. AKCIE VIEW -->
+                <div id="stocks" class="view-content hidden">
+                    <h2 class="text-2xl font-semibold mb-4 text-slate-200">Sledované Akcie</h2>
+                    <div class="bg-card-bg p-4 rounded-2xl shadow-xl border border-card-hover table-container overflow-x-auto">
+                        <table class="min-w-full divide-y divide-card-hover">
+                            <thead>
+                                <tr class="text-left text-slate-400">
+                                    <th class="py-3 px-4 font-semibold">Ikona</th>
+                                    <th class="py-3 px-4 font-semibold">Spoločnosť</th>
+                                    <th class="py-3 px-4 font-semibold">Cena (USD)</th>
+                                    <th class="py-3 px-4 font-semibold">Dnes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="stock-list" class="divide-y divide-card-hover">
+                                <!-- Dáta sa vložia cez JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 4. KOMODITY VIEW -->
+                <div id="commodities" class="view-content hidden">
+                    <h2 class="text-2xl font-semibold mb-4 text-slate-200">Hlavné Komodity</h2>
+                    <div class="bg-card-bg p-4 rounded-2xl shadow-xl border border-card-hover table-container overflow-x-auto">
+                        <table class="min-w-full divide-y divide-card-hover">
+                            <thead>
+                                <tr class="text-left text-slate-400">
+                                    <th class="py-3 px-4 font-semibold">Ikona</th>
+                                    <th class="py-3 px-4 font-semibold">Komodita</th>
+                                    <th class="py-3 px-4 font-semibold">Cena (USD/Jednotka)</th>
+                                    <th class="py-3 px-4 font-semibold">Dnes</th>
+                                </tr>
+                            </thead>
+                            <tbody id="commodity-list" class="divide-y divide-card-hover">
+                                <!-- Dáta sa vložia cez JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 5. DRAHÉ KOVY VIEW -->
+                <div id="metals" class="view-content hidden">
+                    <h2 class="text-2xl font-semibold mb-4 text-slate-200">Drahé Kovy</h2>
+                    <div class="bg-card-bg p-4 rounded-2xl shadow-xl border border-card-hover">
+                        <div id="metals-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <!-- Dáta sa vložia cez JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 6. DLHOPISY VIEW -->
+                <div id="bonds" class="view-content hidden">
+                    <h2 class="text-2xl font-semibold mb-4 text-slate-200">Vybrané Dlhopisy (Mock Dáta)</h2>
+                    <div class="bg-card-bg p-4 rounded-2xl shadow-xl border border-card-hover table-container overflow-x-auto">
+                        <table class="min-w-full divide-y divide-card-hover">
+                            <thead>
+                                <tr class="text-left text-slate-400">
+                                    <th class="py-3 px-4 font-semibold">Označenie</th>
+                                    <th class="py-3 px-4 font-semibold">Názov</th>
+                                    <th class="py-3 px-4 font-semibold">Výnos (%)</th>
+                                    <th class="py-3 px-4 font-semibold hidden sm:table-cell">Maturita</th>
+                                </tr>
+                            </thead>
+                            <tbody id="bond-list" class="divide-y divide-card-hover">
+                                <!-- Dáta sa vložia cez JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 7. MENY VIEW (Forex) -->
+                <div id="forex" class="view-content hidden">
+                    <h2 class="text-2xl font-semibold mb-4 text-slate-200">Kurzy Mien (Forex)</h2>
+                    <div class="bg-card-bg p-6 rounded-2xl shadow-xl border border-card-hover">
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="forex-list">
+                            <!-- Dáta sa vložia cez JS -->
+                        </div>
+                    </div>
                 </div>
                 
-                <button onclick="calculate()">Prepočítať</button>
-                <p class="result" id="conversionResult">Výsledok: 0.00 EUR</p>
-            </div>
-        </section>
+                <!-- 8. KALKULAČKA VIEW -->
+                <div id="calculator" class="view-content hidden">
+                    <h2 class="text-2xl font-semibold mb-4 text-slate-200">Historická Investičná Kalkulačka</h2>
+                    <div class="bg-card-bg p-6 rounded-2xl shadow-xl border border-card-hover max-w-lg">
+                        <p class="text-slate-400 mb-4">Zistite, akú hodnotu by mala vaša investícia dnes, keby ste ju uskutočnili v minulosti (simulácia priemernej návratnosti).</p>
+                        
+                        <div class="mb-4">
+                            <label for="asset" class="block text-sm font-medium mb-1">Vyberte aktívum:</label>
+                            <select id="asset" class="w-full p-2 rounded-lg bg-card-hover text-white border border-card-hover focus:ring-accent-primary focus:border-accent-primary">
+                                <option value="sp500">S&P 500 Index</option>
+                                <option value="btc">Bitcoin (BTC)</option>
+                                <option value="gold">Zlato (XAU)</option>
+                            </select>
+                        </div>
 
-        <section class="rates-master-section box">
-            <div class="tabs">
-                <button class="tab-button active" data-asset="fiat" onclick="showAssetClass('fiat')">Meny</button>
-                <button class="tab-button" data-asset="crypto" onclick="showAssetClass('crypto')">Kryptomeny</button>
-                <button class="tab-button" data-asset="stocks" onclick="showAssetClass('stocks')">Akcie</button>
-            </div>
+                        <div class="mb-4">
+                            <label for="years" class="block text-sm font-medium mb-1">Počet rokov v minulosti (napr. 10):</label>
+                            <input type="number" id="years" value="10" min="1" max="50" class="w-full p-2 rounded-lg bg-card-hover text-white border border-card-hover focus:ring-accent-primary focus:border-accent-primary">
+                        </div>
 
-            <div id="fiatRates" class="rates-table-view active">
-                <h2>Živé kurzy mien (EUR základ)</h2>
-                <table class="rates-table">
-                    <thead><tr><th>Mena</th><th>Názov</th><th>Kurz (1 EUR = ?)</th></tr></thead>
-                    <tbody id="fiatTableBody"><tr><td colspan="3">Načítavam dáta...</td></tr></tbody>
-                </table>
-            </div>
+                        <div class="mb-6">
+                            <label for="investment" class="block text-sm font-medium mb-1">Pôvodná investovaná suma (USD):</label>
+                            <input type="number" id="investment" value="1000" min="1" class="w-full p-2 rounded-lg bg-card-hover text-white border border-card-hover focus:ring-accent-primary focus:border-accent-primary">
+                        </div>
 
-            <div id="cryptoRates" class="rates-table-view hidden">
-                <h2>Živé kurzy kryptomien (EUR základ)</h2>
-                   <table class="rates-table">
-                    <thead><tr><th>Symbol</th><th>Názov</th><th>Kurz (1 EUR = ?)</th></tr></thead>
-                    <tbody id="cryptoTableBody"><tr><td colspan="3">Načítavam dáta...</td></tr></tbody>
-                </table>
-            </div>
+                        <button onclick="calculateInvestment()" class="w-full p-3 rounded-xl font-bold bg-accent-primary text-white hover:bg-blue-600 transition duration-200 shadow-md shadow-accent-primary/30">
+                            Vypočítať Hodnotu Dnes
+                        </button>
 
-            <div id="stocksRates" class="rates-table-view hidden">
-                <h2>Ceny akcií (Simulácia)</h2>
-                   <table class="rates-table">
-                    <thead><tr><th>Symbol</th><th>Názov</th><th>Cena (USD)</th></tr></thead>
-                    <tbody id="stocksTableBody"><tr><td colspan="3">Načítavam dáta...</td></tr></tbody>
-                </table>
-            </div>
+                        <div id="calculator-result" class="mt-6 p-4 bg-card-hover rounded-xl border border-card-hover hidden">
+                            <h4 class="text-lg font-semibold mb-2 text-accent-primary">Výsledok simulácie:</h4>
+                            <p id="result-text" class="text-white text-2xl font-bold"></p>
+                        </div>
 
-        </section>
-    </main>
-    
-    <!-- Sekcia Detailu -->
-    <div id="detailSection" class="detail-section container hidden">
-        <section class="box full-width">
-            <h2 id="detailTitle">Detail kurzu: EUR/USD</h2>
-            <p class="detail-price">Aktuálna Cena: <span id="currentDetailPrice">...</span></p>
-            <canvas id="priceChart"></canvas>
-        </section>
+                        <!-- Info box o kalkulačke -->
+                        <div class="mt-8 p-4 bg-card-hover/50 rounded-lg border border-card-hover">
+                            <p class="text-sm text-slate-400">Táto kalkulačka používa fiktívne priemerné ročné výnosy pre ilustráciu zloženého úročenia. Pre presné výsledky by bolo nutné získať presné historické dáta.</p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        
+        <!-- O NÁS VIEW -->
+        <div id="about" class="hidden">
+            <h2 class="text-3xl font-bold mb-6 text-slate-100 border-b border-card-hover pb-2">O nás: Váš nástroj pre rýchle investičné dáta</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 mt-8">
+                <div class="space-y-6">
+                    <div class="p-6 bg-card-bg rounded-2xl shadow-xl border border-card-hover">
+                        <h3 class="text-xl font-semibold text-accent-primary mb-3">Prečo Kurzy-check?</h3>
+                        <p class="text-slate-300">
+                            Vznikli sme s cieľom priniesť prehľad do sveta financií, kryptomien, akcií a komodít. Namiesto preplnených a zložitých portálov ponúkame jednoduchý, čistý a moderný dashboard, kde nájdete kľúčové informácie v priebehu sekúnd. Našou inšpiráciou je čistota a rýchlosť profesionálnych platforiem, ako sú XTB a eToro, a preto kladieme dôraz na vizuálnu atraktivitu a rýchlosť.
+                        </p>
+                    </div>
+
+                    <div class="p-6 bg-card-bg rounded-2xl shadow-xl border border-card-hover">
+                        <h3 class="text-xl font-semibold text-accent-primary mb-3">Čo u nás nájdete?</h3>
+                        <ul class="space-y-2 text-slate-300 list-disc list-inside">
+                            <li>📈 Aktuálne ceny globálnych akcií (vrátane NVDA, AAPL, S&P 500).</li>
+                            <li>₿ Trhový prehľad top kryptomien (BTC, ETH, SOL, atď.) s 24h zmenami.</li>
+                            <li>🥇 Detailné dáta o drahých kovoch a komoditách (Ropa, Cukor, Nikel).</li>
+                            <li>💱 Kurzy mien a jednoduchá investičná kalkulačka pre simuláciu.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="flex flex-col space-y-6">
+                    <!-- Ilustrácia -->
+                    <div class="bg-card-bg p-8 rounded-2xl shadow-xl border border-card-hover flex justify-center items-center h-full">
+                        <div class="text-9xl text-accent-primary opacity-50">
+                            <i data-lucide="line-chart" class="w-32 h-32"></i>
+                        </div>
+                    </div>
+                    <p class="text-slate-400 text-sm text-center">
+                        <i data-lucide="info" class="w-4 h-4 inline-block mr-1"></i>
+                        Všetky dáta na tejto stránke sú v súčasnosti simulované pre účely vizuálnej demonštrácie a funkcionality.
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <footer class="footer">
-        <p>&copy; 2025 kurzy check. Dáta z API. Všetky práva vyhradené.</p>
-    </footer>
+    <!-- JavaScript Logika -->
+    <script>
+        // --- Mock Dáta pre aplikáciu ---
+        
+        // Funkcia na generovanie ikony/emotikony pre vizuálnu príťažlivosť
+        const getIcon = (symbol, type) => {
+            switch (symbol) {
+                // Crypto
+                case 'BTC': return '₿';
+                case 'ETH': return 'Ξ';
+                case 'XRP': return '✖️';
+                case 'SOL': return '🔆';
+                case 'ADA': return '₳';
+                case 'DOGE': return '🐕';
+                case 'BNB': return '🔸';
+                case 'LTC': return '⛏️';
+                case 'SHIB': return '🐶';
+                case 'TRX': return '🔗';
+                // Akcie
+                case 'NVDA': return 'N';
+                case 'AMD': return 'A';
+                case 'AAPL': return '';
+                case 'META': return 'Ⓜ️';
+                case 'MCD': return '🍔';
+                case 'MA': return '💳';
+                case 'NKE': return '👟';
+                case 'PAG': return 'P';
+                case 'HP': return 'H';
+                case 'S&P500': return '📈';
+                // Komodity/Kovy
+                case 'XAU': return '🥇'; // Zlato
+                case 'XAG': return '🥈'; // Striebro
+                case 'BRENT': return '🛢️'; // Ropa
+                case 'PL': return '💠'; // Platina
+                case 'PA': return '⚪'; // Paládium
+                case 'CC': return '🍫'; // Kakao
+                case 'SUGAR': return '🍬'; // Cukor
+                case 'NI': return '🧪'; // Nikel
+                case 'PB': return '🧱'; // Olovo
+                case 'ZN': return '🔩'; // Zinok
+                // Dlhopisy
+                case 'US10Y': return '🏛️'; 
+                case 'DE10Y': return '🇩🇪';
+                case 'SKGOV': return '🇸🇰';
+                case 'JP10Y': return '🇯🇵';
 
-    <!-- Externé knižnice -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <!-- Hlavný JavaScript súbor -->
-    <script src="script.js"></script>
+                default: return type === 'stock' ? '🏢' : '💲';
+            }
+        };
+
+        // Dáta pre jednotlivé záložky
+        const mockCrypto = [ 
+            { name: "Bitcoin", symbol: "BTC", price: 65123.45, change24h: 3.45, cap: "1.28T", icon: getIcon('BTC') },
+            { name: "Ethereum", symbol: "ETH", price: 3876.90, change24h: 2.15, cap: "465B", icon: getIcon('ETH') },
+            { name: "XRP", symbol: "XRP", price: 0.5212, change24h: -0.95, cap: "28B", icon: getIcon('XRP') },
+            { name: "BNB", symbol: "BNB", price: 601.50, change24h: 1.88, cap: "90B", icon: getIcon('BNB') },
+            { name: "Solana", symbol: "SOL", price: 155.60, change24h: -1.22, cap: "69B", icon: getIcon('SOL') },
+            { name: "Litecoin", symbol: "LTC", price: 82.30, change24h: 0.77, cap: "6B", icon: getIcon('LTC') },
+            { name: "Cardano", symbol: "ADA", price: 0.4567, change24h: -2.01, cap: "16B", icon: getIcon('ADA') },
+            { name: "Dogecoin", symbol: "DOGE", price: 0.1650, change24h: 5.80, cap: "23B", icon: getIcon('DOGE') },
+            { name: "TRON", symbol: "TRX", price: 0.1250, change24h: 0.15, cap: "10B", icon: getIcon('TRX') },
+            { name: "Shiba Inu", symbol: "SHIB", price: 0.0000225, change24h: 4.10, cap: "13B", icon: getIcon('SHIB') },
+        ];
+
+        const mockStocks = [ 
+            { symbol: "S&P500", company: "S&P 500 Index", price: 5123.45, change: 1.01, icon: getIcon('S&P500') },
+            { symbol: "NVDA", company: "NVIDIA Corp.", price: 955.10, change: 2.15, icon: getIcon('NVDA') },
+            { symbol: "AAPL", company: "Apple Inc.", price: 185.30, change: 0.85, icon: getIcon('AAPL') },
+            { symbol: "AMD", company: "Advanced Micro Devices", price: 160.20, change: -1.20, icon: getIcon('AMD') },
+            { symbol: "META", company: "Meta Platforms", price: 475.00, change: 0.45, icon: getIcon('META') },
+            { symbol: "MCD", company: "McDonald's Corp.", price: 275.50, change: 0.22, icon: getIcon('MCD') },
+            { symbol: "MA", company: "Mastercard Inc.", price: 450.90, change: 1.50, icon: getIcon('MA') },
+            { symbol: "NKE", company: "Nike, Inc.", price: 92.40, change: -0.80, icon: getIcon('NKE') },
+            { symbol: "HP", company: "HP Inc.", price: 30.15, change: 0.55, icon: getIcon('HP') },
+            { symbol: "PAG", company: "Penske Automotive Group", price: 165.70, change: 0.10, icon: getIcon('PAG') },
+        ];
+
+        const mockCommodities = [ // Ostatné komodity
+            { name: "Ropa Brent", symbol: "BRENT", price: 85.30, change: -0.45, unit: "Barel", icon: getIcon('BRENT') },
+            { name: "Kakao", symbol: "CC", price: 9500.00, change: 2.50, unit: "Tona", icon: getIcon('CC') },
+            { name: "Cukor", symbol: "SUGAR", price: 18.50, change: -0.05, unit: "Libra", icon: getIcon('SUGAR') },
+            { name: "Nikel", symbol: "NI", price: 18500.00, change: 1.20, unit: "Tona", icon: getIcon('NI') },
+            { name: "Olovo", symbol: "PB", price: 2200.00, change: 0.70, unit: "Tona", icon: getIcon('PB') },
+            { name: "Zinok", symbol: "ZN", price: 2800.00, change: 0.35, unit: "Tona", icon: getIcon('ZN') },
+        ];
+
+        const mockMetals = [ // Drahé kovy - Zobrazenie v kartách
+            { name: "Zlato (XAU)", symbol: "XAU", price: 2325.50, change: 0.89, icon: getIcon('XAU') },
+            { name: "Striebro (XAG)", symbol: "XAG", price: 30.15, change: 1.55, icon: getIcon('XAG') },
+            { name: "Platina (PL)", symbol: "PL", price: 980.00, change: 0.12, icon: getIcon('PL') },
+            { name: "Paládium (PA)", symbol: "PA", price: 950.00, change: -1.15, icon: getIcon('PA') },
+        ];
+        
+        const mockBonds = [ // Dlhopisy
+            { symbol: "US10Y", name: "10-ročný US Treasury", yield: 4.25, change: 0.05, maturity: "2034", icon: getIcon('US10Y') },
+            { symbol: "DE10Y", name: "10-ročný Nemecký Bund", yield: 2.55, change: -0.02, maturity: "2034", icon: getIcon('DE10Y') },
+            { symbol: "SKGOV", name: "Slovenský 5-ročný (Mock)", yield: 3.80, change: 0.10, maturity: "2029", icon: getIcon('SKGOV') },
+            { symbol: "JP10Y", name: "10-ročný Japonský Vládny", yield: 0.85, change: 0.01, maturity: "2034", icon: getIcon('JP10Y') },
+        ];
+
+        const mockForex = [
+            { pair: "EUR/USD", rate: 1.0854, change: 0.10, icon: '🇪🇺/🇺🇸' },
+            { pair: "EUR/CZK", rate: 24.78, change: -0.05, icon: '🇪🇺/🇨🇿' },
+            { pair: "USD/JPY", rate: 155.12, change: -0.30, icon: '🇺🇸/🇯🇵' },
+            { pair: "GBP/USD", rate: 1.2550, change: 0.20, icon: '🇬🇧/🇺🇸' },
+        ];
+
+        // --- Core Logika UI ---
+
+        let currentMainView = 'home';
+        let currentTabView = 'dashboard';
+
+        /**
+         * Prepína medzi hlavnými sekciami (Domov/O nás) 
+         * @param {string} viewId 'home' alebo 'about'
+         */
+        function navigate(viewId) {
+            currentMainView = viewId;
+            const mainContent = document.getElementById('main-content');
+            const aboutContent = document.getElementById('about');
+            
+            // Logika prepínania štýlov horných navigačných tlačidiel
+            const homeBtn = document.getElementById('nav-home');
+            const aboutBtn = document.getElementById('nav-about');
+
+            // Reset tried
+            [homeBtn, aboutBtn].forEach(btn => {
+                btn.classList.remove('bg-accent-primary', 'text-white', 'shadow-lg', 'shadow-accent-primary/30');
+                btn.classList.add('text-slate-300', 'hover:bg-card-hover');
+            });
+
+
+            if (viewId === 'home') {
+                aboutContent.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+                // Nastavenie aktívneho štýlu pre Domov
+                homeBtn.classList.add('bg-accent-primary', 'text-white', 'shadow-lg', 'shadow-accent-primary/30');
+                homeBtn.classList.remove('text-slate-300', 'hover:bg-card-hover');
+                showView(currentTabView); 
+            } else { // 'about'
+                mainContent.classList.add('hidden');
+                aboutContent.classList.remove('hidden');
+                // Nastavenie aktívneho štýlu pre O nás
+                aboutBtn.classList.add('bg-accent-primary', 'text-white', 'shadow-lg', 'shadow-accent-primary/30');
+                aboutBtn.classList.remove('text-slate-300', 'hover:bg-card-hover');
+            }
+        }
+
+        /**
+         * Prepína zobrazenie na základe ID (dashboard, crypto, stocks, ...)
+         * @param {string} viewId ID divu, ktoré sa má zobraziť
+         */
+        function showView(viewId) {
+            currentTabView = viewId;
+            const views = document.querySelectorAll('.view-content');
+            views.forEach(view => {
+                view.classList.add('hidden');
+            });
+            document.getElementById(viewId).classList.remove('hidden');
+
+            // Aktivácia tlačidiel záložiek
+            const buttons = document.querySelectorAll('#main-tabs .tab-button');
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-view') === viewId) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+
+        // --- Inicializácia a vylepšenie Grafu (Chart.js) ---
+
+        function initChart() {
+            const ctx = document.getElementById('btcChart').getContext('2d');
+            // Gradient pre lepšiu vizuálnu atraktivitu
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, 'rgba(59, 130, 246, 0.5)'); 
+            gradient.addColorStop(1, 'rgba(59, 130, 246, 0)'); 
+            
+            const data = {
+                labels: ['Po', 'Ut', 'St', 'Št', 'Pi', 'So', 'Ne'],
+                datasets: [{
+                    label: 'BTC Cena (USD)',
+                    data: [62000, 63500, 61000, 64500, 65000, 64800, 65123],
+                    borderColor: '#3b82f6', // accent-primary
+                    backgroundColor: gradient,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#3b82f6',
+                    fill: true,
+                    borderWidth: 3,
+                }]
+            };
+
+            new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: 'rgba(30, 41, 59, 0.9)', 
+                            titleColor: '#fff',
+                            bodyColor: '#e2e8f0',
+                            borderColor: '#334155', 
+                            borderWidth: 1,
+                            cornerRadius: 8,
+                            padding: 12,
+                            callbacks: {
+                                label: (context) => ' Cena: $' + context.parsed.y.toLocaleString('en-US')
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8' } 
+                        },
+                        y: {
+                            grid: {
+                                color: '#334155', 
+                                borderDash: [5, 5]
+                            },
+                            ticks: {
+                                color: '#94a3b8',
+                                callback: (value) => '$' + value.toLocaleString('en-US')
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // --- Renderovanie Zoznamov ---
+
+        /**
+         * Generuje HTML riadok pre tabuľku s ikonami.
+         */
+        function generateTableRow(item, index, isCap = false) {
+            const isPositive = item.change >= 0;
+            const colorClass = isPositive ? 'text-up-green' : 'text-down-red';
+            const sign = isPositive ? '+' : '';
+            const capHTML = isCap ? `<td class="py-3 px-4 text-slate-400 hidden sm:table-cell">$${item.cap}</td>` : '';
+            const priceString = typeof item.price === 'number' ? `${item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 4 })}` : item.price;
+
+
+            return `
+                <tr class="data-row">
+                    <td class="py-3 px-4 text-slate-400">${index !== null ? index + 1 : ''}</td>
+                    <td class="py-3 px-4 font-semibold text-white flex items-center">
+                        <span class="text-xl mr-3">${item.icon}</span> 
+                        ${item.name || item.company} <span class="text-slate-400/80 text-sm ml-2">(${item.symbol})</span>
+                    </td>
+                    <td class="py-3 px-4">$${priceString}</td>
+                    <td class="py-3 px-4 ${colorClass} font-medium">${sign}${item.change.toFixed(2)}%</td>
+                    ${capHTML}
+                </tr>
+            `;
+        }
+
+        function renderCryptoList() {
+            const tbody = document.getElementById('crypto-list');
+            tbody.innerHTML = '';
+            mockCrypto.forEach((item, index) => {
+                // Pre crypto sa používa hodnota 'change24h' namiesto 'change'
+                tbody.insertAdjacentHTML('beforeend', generateTableRow({
+                    ...item,
+                    change: item.change24h 
+                }, index, true));
+            });
+        }
+
+        function renderStockList() {
+            const tbody = document.getElementById('stock-list');
+            tbody.innerHTML = '';
+            mockStocks.forEach((item, index) => {
+                // Akcie používajú vlastnú hlavičku s ikonou namiesto čísla
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr class="data-row">
+                        <td class="py-3 px-4 text-xl">${item.icon}</td>
+                        <td class="py-3 px-4 font-semibold text-white">
+                            ${item.company} <span class="text-slate-400/80 text-sm ml-2">(${item.symbol})</span>
+                        </td>
+                        <td class="py-3 px-4">$${item.price.toFixed(2)}</td>
+                        <td class="py-3 px-4 ${item.change >= 0 ? 'text-up-green' : 'text-down-red'} font-medium">
+                            ${item.change >= 0 ? '+' : ''}${item.change.toFixed(2)}%
+                        </td>
+                    </tr>
+                `);
+            });
+        }
+
+        function renderCommodityList() {
+            const tbody = document.getElementById('commodity-list');
+            tbody.innerHTML = '';
+            mockCommodities.forEach((item, index) => {
+                const isPositive = item.change >= 0;
+                const colorClass = isPositive ? 'text-up-green' : 'text-down-red';
+                const sign = isPositive ? '+' : '';
+                const priceString = `$${item.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} / ${item.unit}`;
+
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr class="data-row">
+                        <td class="py-3 px-4 text-xl">${item.icon}</td>
+                        <td class="py-3 px-4 font-semibold text-white">${item.name}</td>
+                        <td class="py-3 px-4">${priceString}</td>
+                        <td class="py-3 px-4 ${colorClass} font-medium">${sign}${item.change.toFixed(2)}%</td>
+                    </tr>
+                `);
+            });
+        }
+        
+        function renderMetalsList() {
+            const listDiv = document.getElementById('metals-list');
+            listDiv.innerHTML = '';
+            mockMetals.forEach(item => {
+                const isPositive = item.change >= 0;
+                const colorClass = isPositive ? 'text-up-green' : 'text-down-red';
+                const sign = isPositive ? '+' : '';
+
+                listDiv.insertAdjacentHTML('beforeend', `
+                    <div class="bg-card-hover p-4 rounded-xl shadow-md border border-card-hover transition duration-150 hover:bg-card-hover/80">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-4xl">${item.icon}</span>
+                            <span class="text-xs font-semibold text-slate-400">${item.symbol}</span>
+                        </div>
+                        <p class="text-lg font-bold text-white">${item.name}</p>
+                        <div class="flex justify-between items-end mt-2">
+                            <span class="text-2xl font-extrabold text-up-green">$${item.price.toFixed(2)}</span>
+                            <span class="text-sm ${colorClass} font-semibold">${sign}${item.change.toFixed(2)}%</span>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        function renderBondsList() {
+            const tbody = document.getElementById('bond-list');
+            tbody.innerHTML = '';
+            mockBonds.forEach((item, index) => {
+                const isPositive = item.change >= 0;
+                const colorClass = isPositive ? 'text-up-green' : 'text-down-red';
+                const sign = isPositive ? '+' : '';
+
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr class="data-row">
+                        <td class="py-3 px-4 text-xl">${item.icon}</td>
+                        <td class="py-3 px-4 text-slate-300">${item.name} <span class="text-slate-400/80 text-sm ml-2">(${item.symbol})</span></td>
+                        <td class="py-3 px-4 text-white font-bold">${item.yield.toFixed(2)}% <span class="text-sm ${colorClass}">(${sign}${item.change.toFixed(2)})</span></td>
+                        <td class="py-3 px-4 text-slate-400 hidden sm:table-cell">${item.maturity}</td>
+                    </tr>
+                `);
+            });
+        }
+        
+        function renderForexList() {
+            const listDiv = document.getElementById('forex-list');
+            listDiv.innerHTML = '';
+            mockForex.forEach(item => {
+                const isPositive = item.change >= 0;
+                const colorClass = isPositive ? 'text-up-green' : 'text-down-red';
+                const sign = isPositive ? '+' : '';
+
+                listDiv.insertAdjacentHTML('beforeend', `
+                    <div class="p-4 bg-card-hover rounded-xl border border-card-hover shadow-md transition duration-150 hover:bg-card-hover/80">
+                        <p class="text-slate-400 text-sm mb-1">${item.pair} <span class="text-2xl ml-1">${item.icon}</span></p>
+                        <div class="flex justify-between items-end">
+                            <p class="text-3xl font-bold text-white">${item.rate.toFixed(4)}</p>
+                            <span class="${colorClass} text-base font-semibold">${sign}${item.change.toFixed(2)}%</span>
+                        </div>
+                    </div>
+                `);
+            });
+        }
+
+        // --- Logika Kalkulačky ---
+
+        // Mock historické dáta pre kalkulačku (priemerný ročný výnos)
+        const mockHistoricalReturns = {
+            sp500: 0.10, // Priemerný ročný výnos 10%
+            btc: 0.50,   // Priemerný ročný výnos 50% (veľmi optimistický)
+            gold: 0.05   // Priemerný ročný výnos 5%
+        };
+
+        function calculateInvestment() {
+            const asset = document.getElementById('asset').value;
+            const years = parseInt(document.getElementById('years').value);
+            const investment = parseFloat(document.getElementById('investment').value);
+            const resultDiv = document.getElementById('calculator-result');
+            const resultText = document.getElementById('result-text');
+
+            if (isNaN(years) || isNaN(investment) || years <= 0 || investment <= 0) {
+                resultText.innerHTML = "Zadajte platné sumy a roky.";
+                resultDiv.classList.remove('hidden');
+                return;
+            }
+
+            const returnRate = mockHistoricalReturns[asset];
+            
+            // Vzorec zloženého úročenia: FV = PV * (1 + r)^n
+            const futureValue = investment * Math.pow((1 + returnRate), years);
+            const profit = futureValue - investment;
+            
+            // Formatovanie výsledku
+            const formattedFutureValue = futureValue.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+            const formattedProfit = profit.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+            
+            resultText.innerHTML = `
+                Celková hodnota dnes:<br>
+                <span class="text-up-green text-4xl">${formattedFutureValue}</span>
+                <p class="text-sm text-slate-400 mt-2">Zisk: <span class="font-bold text-up-green">${formattedProfit}</span></p>
+                <p class="text-sm text-slate-500 mt-2">Simulované s ročným výnosom ${returnRate * 100}%</p>
+            `;
+            
+            resultDiv.classList.remove('hidden');
+        }
+
+
+        // --- Inicializácia aplikácie ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Inicializácia ikon
+            lucide.createIcons();
+            
+            // Renderovanie všetkých dát
+            renderCryptoList();
+            renderStockList();
+            renderCommodityList();
+            renderMetalsList();
+            renderBondsList();
+            renderForexList();
+            
+            // Spustenie počiatočného zobrazenia a grafu
+            showView('dashboard');
+            initChart();
+            
+            // Nastavenie počiatočnej navigácie
+            navigate('home');
+        });
+    </script>
 </body>
 </html>
