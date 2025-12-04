@@ -183,3 +183,28 @@ body {
         gap: 30px;
     }
 }
+/* Univerzálna Kalkulačka - Štýly */
+.asset-selectors {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 15px;
+}
+
+.asset-selectors select {
+    flex: 1; /* Aby obe roletky zaberali rovnaké miesto */
+    /* Zdedí štýly z .calculator select */
+}
+
+.swap-icon {
+    font-size: 20px;
+    cursor: pointer;
+    padding: 0 5px;
+    color: #0079C2;
+}
+
+/* Prípadné úpravy existujúcich selektorov (pre istotu) */
+.calculator select {
+    width: auto; /* Zrušíme 100% šírku, lebo ju riadi flexbox */
+    margin-bottom: 0;
+}
