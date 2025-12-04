@@ -282,9 +282,10 @@ function renderChart(symbol, type) {
 // Načíta dáta hneď po spustení
 fetchAllData();
 
-// Nastaví aktualizáciu všetkých tabuliek (mená/krypto/akcie) každú hodinu
-// 3600000 ms = 1 hodina (pretože bezplatné API nedovoľuje každých 5 sekúnd)
-setInterval(fetchAllData, 3600000); 
+// NOVÉ: Nastaví aktualizáciu všetkých hlavných tabuliek (Meny, Krypto, Akcie) každú minútu (60 sekúnd).
+// Tým zabezpečíme real-time pocit bez prekročenia limitov bezplatných API!
+const MAIN_UPDATE_INTERVAL = 60000; // 60 000 ms = 1 minúta
+setInterval(fetchAllData, MAIN_UPDATE_INTERVAL); 
 
 // Zabezpečenie, že po načítaní stránky je zobrazená správna záložka
 document.addEventListener('DOMContentLoaded', () => {
